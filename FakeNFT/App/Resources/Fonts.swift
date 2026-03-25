@@ -1,7 +1,6 @@
 import UIKit
 
 extension UIFont {
-    // Ниже приведены примеры шрифтов, настоящие шрифты надо взять из фигмы
 
     // Headline Fonts
     static var headline1 = UIFont.systemFont(ofSize: 34, weight: .bold)

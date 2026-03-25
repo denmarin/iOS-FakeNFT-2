@@ -15,30 +15,30 @@ final class AppTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTabs()
+        self.selectedIndex = 1
     }
 
     private func setupTabs() {
         let catalogController = TestCatalogViewController(servicesAssembly: servicesAssembly)
-        catalogController.title = "Catalog"
 
-        let cartController = makePlaceholderController(title: "Cart")
-        let profileController = makePlaceholderController(title: "Profile")
-        let statsController = makePlaceholderController(title: "Statistics")
+        let cartController = UIViewController()
+        let profileController = UIViewController()
+        let statsController = UIViewController()
 
         let catalogNavigation = UINavigationController(rootViewController: catalogController)
         let cartNavigation = UINavigationController(rootViewController: cartController)
         let profileNavigation = UINavigationController(rootViewController: profileController)
         let statsNavigation = UINavigationController(rootViewController: statsController)
 
-        catalogNavigation.tabBarItem = UITabBarItem(title: "Catalog", image: UIImage(systemName: "square.grid.2x2"), tag: 0)
-        cartNavigation.tabBarItem = UITabBarItem(title: "Cart", image: UIImage(systemName: "cart"), tag: 1)
-        profileNavigation.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person"), tag: 2)
-        statsNavigation.tabBarItem = UITabBarItem(title: "Statistics", image: UIImage(systemName: "chart.bar"), tag: 3)
+        profileNavigation.tabBarItem = UITabBarItem(title: "Профиль", image: UIImage(resource: .profileTabBar), tag: 0)
+        catalogNavigation.tabBarItem = UITabBarItem(title: "Каталог", image: UIImage(resource: .catalogTabBar), tag: 1)
+        cartNavigation.tabBarItem = UITabBarItem(title: "Корзина", image: UIImage(resource: .cartTabBar), tag: 2)
+        statsNavigation.tabBarItem = UITabBarItem(title: "Статистика", image: UIImage(resource: .statisticsTabBar), tag: 3)
 
         viewControllers = [
+            profileNavigation,
             catalogNavigation,
             cartNavigation,
-            profileNavigation,
             statsNavigation
         ]
     }
