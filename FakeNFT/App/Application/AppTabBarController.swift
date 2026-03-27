@@ -30,10 +30,10 @@ final class AppTabBarController: UITabBarController {
         let profileNavigation = UINavigationController(rootViewController: profileController)
         let statsNavigation = UINavigationController(rootViewController: statsController)
 
-        profileNavigation.tabBarItem = UITabBarItem(title: "Профиль", image: UIImage(resource: .profileTabBar), tag: 0)
-        catalogNavigation.tabBarItem = UITabBarItem(title: "Каталог", image: UIImage(resource: .catalogTabBar), tag: 1)
-        cartNavigation.tabBarItem = UITabBarItem(title: "Корзина", image: UIImage(resource: .cartTabBar), tag: 2)
-        statsNavigation.tabBarItem = UITabBarItem(title: "Статистика", image: UIImage(resource: .statisticsTabBar), tag: 3)
+        profileNavigation.tabBarItem = UITabBarItem(title: String(localized: "profile"), image: UIImage(resource: .profileTabBar), tag: 0)
+        catalogNavigation.tabBarItem = UITabBarItem(title: String(localized: "catalog"), image: UIImage(resource: .catalogTabBar), tag: 1)
+        cartNavigation.tabBarItem = UITabBarItem(title: String(localized: "cart"), image: UIImage(resource: .cartTabBar), tag: 2)
+        statsNavigation.tabBarItem = UITabBarItem(title: String(localized: "statistics"), image: UIImage(resource: .statisticsTabBar), tag: 3)
 
         viewControllers = [
             profileNavigation,
