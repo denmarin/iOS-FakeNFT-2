@@ -12,9 +12,11 @@ class StatisticUserCell: UITableViewCell {
     
     private lazy var viewContent: UIView = {
         let view = UIView()
-        view.backgroundColor = .lightGray
+        view.backgroundColor = .ypLightGrey
         view.layer.cornerRadius = 12
         view.clipsToBounds = true
+        view.layer.borderColor = UIColor.blue.cgColor
+        view.translatesAutoresizingMaskIntoConstraints = false
         
         return view
     }()
@@ -83,18 +85,20 @@ class StatisticUserCell: UITableViewCell {
     private func setupLayout() {
         
         NSLayoutConstraint.activate([
-            viewContent.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 35),
-            viewContent.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            viewContent.topAnchor.constraint(equalTo: contentView.topAnchor),
-            viewContent.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
-        ])
-        
-        NSLayoutConstraint.activate([
             ratingLabel.heightAnchor.constraint(equalToConstant: 20),
             ratingLabel.widthAnchor.constraint(equalToConstant: 27),
             ratingLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             ratingLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
+        
+        
+        NSLayoutConstraint.activate([
+            viewContent.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 35),
+            viewContent.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            viewContent.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
+            viewContent.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4)
+        ])
+        
         
         NSLayoutConstraint.activate([
             avatarImageView.leadingAnchor.constraint(equalTo: viewContent.leadingAnchor, constant: 16),
@@ -105,17 +109,17 @@ class StatisticUserCell: UITableViewCell {
         
         NSLayoutConstraint.activate([
             nameLabel.leadingAnchor.constraint(equalTo: avatarImageView.trailingAnchor, constant: 8),
-            nameLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            nameLabel.centerYAnchor.constraint(equalTo: viewContent.centerYAnchor),
             nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: scoreLabel.leadingAnchor, constant: -16)
         ])
         
         NSLayoutConstraint.activate([
             scoreLabel.trailingAnchor.constraint(equalTo: viewContent.trailingAnchor, constant: -16),
-            scoreLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            scoreLabel.centerYAnchor.constraint(equalTo: viewContent.centerYAnchor),
             scoreLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 50)
         ])
         
-        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 80).isActive = true
+        contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 88).isActive = true
     }
     
     required init?(coder: NSCoder) {
@@ -127,15 +131,19 @@ class StatisticUserCell: UITableViewCell {
         nameLabel.text = "\(user.name)"
         scoreLabel.text = "\(user.score)"
         
-        if let url = user.avatarUrl {
-            avatarImageView.kf.setImage(
-                with: url,
-                placeholder: UIImage.profileTabBar,
-                options: [.transition(.fade(0.2))]
-            )
-        } else {
+        loadAvatar(with: user.avatarUrl)
+    }
+    
+    private func loadAvatar(with url: URL?) {
+        guard let url else {
             avatarImageView.image = UIImage.profileTabBar
+            return
         }
+        
+        avatarImageView.kf.setImage(
+            with: url,
+            placeholder: UIImage.profileTabBar,
+            options: [.transition(.fade(0.2))])
     }
     
     override func prepareForReuse() {

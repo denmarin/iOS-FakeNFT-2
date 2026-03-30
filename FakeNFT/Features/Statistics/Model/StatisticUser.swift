@@ -11,5 +11,5 @@ struct StatisticUser {
     let name: String
     let rating: Int
     let score: Int
-    let avatarUrl: String
+    let avatarUrl: URL?
 }

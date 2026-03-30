@@ -41,49 +41,49 @@ final class StatisticsViewModel: StatisticsViewModelProtocol {
                         name: "Alex",
                         rating: 1,
                         score: 112,
-                        avatarUrl: "https://example.com/alex.jpg"
+                        avatarUrl: URL(string: "https://example.com/alex.jpg")
                     ),
                     StatisticUser(
                         id: "2",
                         name: "Bill",
                         rating: 2,
                         score: 98,
-                        avatarUrl: "https://example.com/bill.jpg"
+                        avatarUrl: URL(string: "https://example.com/bill.jpg")
                     ),
                     StatisticUser(
                         id: "3",
                         name: "Alla",
                         rating: 3,
                         score: 72,
-                        avatarUrl: "https://example.com/alla.jpg"
+                        avatarUrl: URL(string: "https://example.com/alla.jpg")
                     ),
                     StatisticUser(
                         id: "4",
                         name: "Mads",
                         rating: 4,
                         score: 71,
-                        avatarUrl: "https://example.com/mads.jpg"
+                        avatarUrl: URL(string: "https://example.com/mads.jpg")
                     ),
                     StatisticUser(
                         id: "5",
                         name: "Timothée",
                         rating: 5,
                         score: 51,
-                        avatarUrl: "https://example.com/timothee.jpg"
+                        avatarUrl: URL(string: "https://example.com/timothee.jpg")
                     ),
                     StatisticUser(
                         id: "6",
                         name: "Lea",
                         rating: 6,
                         score: 23,
-                        avatarUrl: "https://example.com/lea.jpg"
+                        avatarUrl: URL(string: "https://example.com/lea.jpg")
                     ),
                     StatisticUser(
                         id: "7",
                         name: "Eric",
                         rating: 7,
                         score: 11,
-                        avatarUrl: "https://example.com/eric.jpg"
+                        avatarUrl: URL(string: "https://example.com/eric.jpg")
                     )
                 ]
         
@@ -95,9 +95,4 @@ final class StatisticsViewModel: StatisticsViewModelProtocol {
     func refreshUsers() async {
         await loadUsers()
     }
-    
-    
-    
-    
-    
 }

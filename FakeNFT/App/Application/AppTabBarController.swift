@@ -20,10 +20,12 @@ final class AppTabBarController: UITabBarController {
 
     private func setupTabs() {
         let catalogController = TestCatalogViewController(servicesAssembly: servicesAssembly)
+        
+        let statisticsViewModel = StatisticsViewModel()
 
         let cartController = UIViewController()
         let profileController = UIViewController()
-        let statsController = UIViewController()
+        let statsController = StatisticsViewController(viewModel: statisticsViewModel)
 
         let catalogNavigation = UINavigationController(rootViewController: catalogController)
         let cartNavigation = UINavigationController(rootViewController: cartController)
