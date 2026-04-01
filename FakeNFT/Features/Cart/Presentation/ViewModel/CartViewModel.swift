@@ -24,7 +24,7 @@ final class CartViewModel {
         nfts = [
             Nft(
                 id: "1",
-                images: [URL(string: "https://code.s3.yandex.net/Mobile/iOS/NFT/Typical/April/1.png")!],
+                images: [URL(string: "local://April")!],
                 name: "April",
                 price: 1.78,
                 rating: 1,
@@ -34,7 +34,7 @@ final class CartViewModel {
             ),
             Nft(
                 id: "2",
-                images: [URL(string: "https://code.s3.yandex.net/Mobile/iOS/NFT/Typical/Greena/1.png")!],
+                images: [URL(string: "local://Greena")!],
                 name: "Greena",
                 price: 1.78,
                 rating: 3,
@@ -44,7 +44,7 @@ final class CartViewModel {
             ),
             Nft(
                 id: "3",
-                images: [URL(string: "https://code.s3.yandex.net/Mobile/iOS/NFT/Typical/Spring/1.png")!],
+                images: [URL(string: "local://Spring")!],
                 name: "Spring",
                 price: 1.78,
                 rating: 5,

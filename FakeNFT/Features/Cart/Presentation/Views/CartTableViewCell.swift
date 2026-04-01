@@ -109,8 +109,24 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     }
     
     func setImage(url: URL?) {
-        //nftImageView.kf.setImage(with: url)
-        nftImageView.backgroundColor = .lightGray
+        let placeholder = UIImage(systemName: "photo")
+        
+        if let urlString = url?.absoluteString, urlString.hasPrefix("local://") {
+            let imageName = urlString.replacingOccurrences(of: "local://", with: "")
+            
+            if let localImage = UIImage(named: imageName) {
+                nftImageView.image = localImage
+                nftImageView.contentMode = .scaleAspectFill
+                nftImageView.tintColor = nil
+                nftImageView.backgroundColor = .clear
+                return
+            }
+        }
+        
+        nftImageView.image = placeholder
+        nftImageView.contentMode = .center
+        nftImageView.tintColor = .systemGray4
+        nftImageView.backgroundColor = .systemGray6
     }
     
     // MARK: - Private Methods
