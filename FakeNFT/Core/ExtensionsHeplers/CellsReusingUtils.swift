@@ -28,6 +28,13 @@ extension UITableView {
         }
         return cell
     }
+
+    func dequeueReusableCell<T: UITableViewCell>(indexPath: IndexPath) -> T where T: ReuseIdentifying {
+        guard let cell = dequeueReusableCell(withIdentifier: T.defaultReuseIdentifier, for: indexPath) as? T else {
+            fatalError("Could not dequeue cell with identifier: \(T.defaultReuseIdentifier) for: \(indexPath)")
+        }
+        return cell
+    }
 }
 
 extension UICollectionView {

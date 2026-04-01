@@ -22,7 +22,11 @@ final class AppTabBarController: UITabBarController {
         let catalogController = TestCatalogViewController(servicesAssembly: servicesAssembly)
 
         let cartController = UIViewController()
-        let profileController = UIViewController()
+        
+        let profileMockService = ProfileMockService()
+        let profileViewModel = ProfileViewModelImpl(provider: profileMockService)
+        let profileController = ProfileViewController(viewModel: profileViewModel)
+        
         let statsController = UIViewController()
 
         let catalogNavigation = UINavigationController(rootViewController: catalogController)
