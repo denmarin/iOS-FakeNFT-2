@@ -53,7 +53,6 @@ final class EditProfileViewController: UIViewController{
         button.layer.cornerRadius = 16
         button.clipsToBounds = true
         button.isHidden = true
-        button.addTarget(EditProfileViewController.self, action: #selector(saveButtonDidTap), for: .touchUpInside)
         return button
     }()
     
@@ -157,6 +156,8 @@ final class EditProfileViewController: UIViewController{
     private func setupUI(){
         contentView.addSubview(profilePhotoView)
         contentView.addSubview(saveButton)
+        
+        saveButton.addTarget(self, action: #selector(saveButtonDidTap), for: .touchUpInside)
         
         mainStackView.addArrangedSubview(nameFields)
         mainStackView.addArrangedSubview(descriptionFields)
