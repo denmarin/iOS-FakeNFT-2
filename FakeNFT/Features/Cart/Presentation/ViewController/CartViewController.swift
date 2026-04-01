@@ -17,6 +17,12 @@ final class CartViewController: UIViewController {
         return table
     }()
     
+    private lazy var bottomView: CartBottomView = {
+        let view = CartBottomView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     // MARK: - Init
     init(viewModel: CartViewModel) {
         self.viewModel = viewModel
@@ -56,12 +62,18 @@ final class CartViewController: UIViewController {
     
     private func setupLayout() {
         view.addSubview(tableView)
+        view.addSubview(bottomView)
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: bottomView.topAnchor),
+            
+            bottomView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bottomView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bottomView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            bottomView.heightAnchor.constraint(equalToConstant: 76)
         ])
     }
     
@@ -69,6 +81,10 @@ final class CartViewController: UIViewController {
         viewModel.onChange = { [weak self] in
             Task { @MainActor in
                 self?.tableView.reloadData()
+                self?.bottomView.configure(
+                    count: self?.viewModel.totalAmount ?? 0,
+                    price: self?.viewModel.totalPrice ?? 0.0
+                )
             }
         }
     }
