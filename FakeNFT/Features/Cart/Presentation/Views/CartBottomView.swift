@@ -2,7 +2,7 @@ import UIKit
 
 final class CartBottomView: UIView {
     // MARK: - Private Properties
-    private let infoStackView: UIStackView = {
+    private lazy var infoStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 2
@@ -10,21 +10,21 @@ final class CartBottomView: UIView {
         return stack
     }()
     
-    private let countLabel: UILabel = {
+    private lazy var countLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 15, weight: .regular)
         label.textColor = .ypBlack
         return label
     }()
     
-    private let priceLabel: UILabel = {
+    private lazy var priceLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .bold)
         label.textColor = .greenUniversal
         return label
     }()
     
-    private let checkoutButton: UIButton = {
+    private lazy var checkoutButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .ypBlack
         button.setTitle("К оплате", for: .normal)

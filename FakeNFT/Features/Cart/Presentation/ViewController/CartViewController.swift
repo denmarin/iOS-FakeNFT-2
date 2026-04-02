@@ -98,7 +98,7 @@ final class CartViewController: UIViewController {
 // MARK: - Extensions
 extension CartViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.totalAmount
+        viewModel.totalAmount
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

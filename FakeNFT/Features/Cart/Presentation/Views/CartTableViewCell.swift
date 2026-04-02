@@ -6,7 +6,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     static let identifier = "CartCell"
     
     // MARK: - Private Properties
-    private let nftImageView: UIImageView = {
+    private lazy var nftImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFill
@@ -15,7 +15,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         return imageView
     }()
     
-    private let titleLabel: UILabel = {
+    private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .boldSystemFont(ofSize: 17)
@@ -23,7 +23,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         return label
     }()
     
-    private let ratingStackView: UIStackView = {
+    private lazy var ratingStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .horizontal
@@ -32,7 +32,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         return stackView
     }()
     
-    private let priceTitleLabel: UILabel = {
+    private lazy var priceTitleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 13, weight: .regular)
@@ -41,7 +41,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         return label
     }()
     
-    private let priceValueLabel: UILabel = {
+    private lazy var priceValueLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .boldSystemFont(ofSize: 17)
@@ -49,7 +49,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         return label
     }()
     
-    private let deleteButton: UIButton = {
+    private lazy var deleteButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setImage(UIImage(resource: .cartImageDelete), for: .normal)
@@ -57,7 +57,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         return button
     }()
     
-    private let infoStackView: UIStackView = {
+    private lazy var infoStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .vertical
@@ -66,7 +66,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         return stackView
     }()
     
-    private let priceStackView: UIStackView = {
+    private lazy var priceStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .vertical
@@ -109,7 +109,8 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     }
     
     func setImage(url: URL?) {
-        let placeholder = UIImage(systemName: "photo")
+        let placeholderName = AssetImages.System.placeholder
+        let placeholder = UIImage(systemName: placeholderName)
         
         if let urlString = url?.absoluteString, urlString.hasPrefix("local://") {
             let imageName = urlString.replacingOccurrences(of: "local://", with: "")
