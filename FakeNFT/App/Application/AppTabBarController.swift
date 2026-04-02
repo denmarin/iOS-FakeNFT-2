@@ -21,7 +21,8 @@ final class AppTabBarController: UITabBarController {
     private func setupTabs() {
         let catalogController = TestCatalogViewController(servicesAssembly: servicesAssembly)
 
-        let cartController = UIViewController()
+        let cartViewModel = CartViewModel()
+        let cartController = CartViewController(viewModel: cartViewModel)
         let profileController = UIViewController()
         let statsController = UIViewController()
 
