@@ -1,4 +1,4 @@
-# FakeNFT Structure
+f# FakeNFT Structure
 
 Use this placement policy:
 - `App/`: app launch, root composition, configuration, app resources.
