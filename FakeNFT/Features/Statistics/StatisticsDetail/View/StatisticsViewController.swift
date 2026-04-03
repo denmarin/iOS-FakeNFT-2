@@ -67,7 +67,7 @@ final class StatisticsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        navigationItem.backButtonTitle = ""
         tableView.dataSource = self
         tableView.delegate = self
         
@@ -111,7 +111,7 @@ final class StatisticsViewController: UIViewController {
         let sortButton = UIButton()
         sortButton.setImage(.sort, for: .normal)
         sortButton.tintColor = .ypBlack
-        sortButton.addTarget(self, action: #selector(tapSortButton), for: .touchUpInside)
+        sortButton.addTarget(self, action: #selector(sortButtonTapped), for: .touchUpInside)
         sortButton.translatesAutoresizingMaskIntoConstraints = false
         sortButton.widthAnchor.constraint(equalToConstant: 42).isActive = true
         sortButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
@@ -119,7 +119,7 @@ final class StatisticsViewController: UIViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: sortButton)
     }
     
-    @objc private func tapSortButton() {
+    @objc private func sortButtonTapped() {
         
     }
 
@@ -201,14 +201,36 @@ extension StatisticsViewController: UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         let user = viewModel.users[indexPath.row]
         
+//        let profile = Profile(
+//            id: user.id,
+//            name: user.name,
+//            avatar: user.avatarUrl,
+//            description: nil,
+//            website: nil,
+//            nftIDs: [],
+//            likedNftIDs: []
+//        )
+        
+        // В StatisticsViewController, в didSelectRowAt
         let profile = Profile(
             id: user.id,
             name: user.name,
             avatar: user.avatarUrl,
-            description: nil,
-            website: nil,
-            nftIDs: [],
+            description: "Тестовое описание пользователя",
+            website: URL(string: "https://example.com"),
+            nftIDs: ["1", "2", "3", "4", "5"],  // ← добавим тестовые ID
             likedNftIDs: []
         )
+        
+        let detailViewModel = ProfileDetailViewModel(profile: profile)
+        
+        let nftService = MockStatisticsNftService()
+        
+        let detailViewController = ProfileDetailViewController(
+            viewModel: detailViewModel,
+            nftService: nftService
+        )
+        
+        navigationController?.pushViewController(detailViewController, animated: true)
     }
 }

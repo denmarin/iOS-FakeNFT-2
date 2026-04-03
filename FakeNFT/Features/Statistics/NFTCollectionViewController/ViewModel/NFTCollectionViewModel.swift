@@ -16,28 +16,40 @@ enum NftCollectionState {
 }
 
 protocol NftCollectionViewModelProtocol {
-    var state: NftDetailState { get }
+    var state: NftCollectionState { get }
+    
+    var statePublisher: AnyPublisher<NftCollectionState, Never> { get }
+    var nftsPublisher: AnyPublisher<[Nft], Never> { get }
+    
     
     var nfts: [Nft] { get }
-    
     func loadNfts() async
 }
 
 
 @MainActor
-final class NFTCollectionViewModel: NftCollectionViewModelProtocol {
+final class NftCollectionViewModel: @preconcurrency NftCollectionViewModelProtocol {
     
-    @Published private(set) var state: NftDetailState = .loading
+    var statePublisher: AnyPublisher<NftCollectionState, Never> {
+        return $state.eraseToAnyPublisher()
+    }
+    
+    var nftsPublisher: AnyPublisher<[Nft], Never> {
+        return $nfts.eraseToAnyPublisher()
+    }
+    
+    
+    @Published private(set) var state: NftCollectionState = .loading
     
     @Published private(set) var nfts: [Nft] = []
     
     private let nftIDs: [String]
     
-    private let nftService: NftService
+    private let nftService: StatisticsNftServiceProtocol
     
     private var cancellables = Set<AnyCancellable>()
     
-    init(nftIDs: [String], nftService: NftService) {
+    init(nftIDs: [String], nftService: StatisticsNftServiceProtocol) {
         self.nftIDs = nftIDs
         self.nftService = nftService
     }
@@ -51,13 +63,12 @@ final class NFTCollectionViewModel: NftCollectionViewModelProtocol {
         state = .loading
         
         do {
-            var loadedNfts: [Nft] = []
             
-            for id in nftIDs {
-                let mockNft = createMockNft(id: id)
-                loadedNfts.append(mockNft)
-            }
-            self.nfts = loadedNfts
+            let loadedNfts = try await nftService.loadNfts(ids: nftIDs)
+            
+            let sortedNfts = loadedNfts.sorted { $0.rating > $1.rating }
+            
+            self.nfts = sortedNfts
             self.state = .content
             
         } catch {
@@ -78,6 +89,4 @@ final class NFTCollectionViewModel: NftCollectionViewModelProtocol {
             website: URL(string: "https://example.com")!
         )
     }
-    
-    
 }
