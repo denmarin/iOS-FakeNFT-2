@@ -19,8 +19,8 @@ final class EditProfileViewModel{
         
         self.name = header.name
         self.description = header.description
-        self.website = header.website
-        self.avatarAssetName = header.avatarAssetName
+        self.website = header.website ?? ""
+        self.avatarAssetName = header.avatarAssetName?.absoluteString ?? ""
         
         setupChangeTracking()
     }
@@ -32,20 +32,20 @@ final class EditProfileViewModel{
                 return name != self.currentHeader.name ||
                 desc != self.currentHeader.description ||
                 site != self.currentHeader.website ||
-                avatarAssetName != self.currentHeader.avatarAssetName
+                avatarAssetName != self.currentHeader.avatarAssetName?.absoluteString
             }
             .assign(to: &$isChanged)
     }
     
     func didTapSave() {
-        let updatedHeader = ProfileHeader(
-            name: name,
-            description: description,
-            website: website,
-            avatarAssetName: avatarAssetName
-        )
-        
-        onSave(updatedHeader)
+//        let updatedHeader = ProfileHeader(
+//            name: name,
+//            description: description,
+//            website: website,
+//            avatarAssetName: avatarAssetName
+//        )
+//        
+//        onSave(updatedHeader)
     }
     
     func updateAvatar(with newAssetName: String) {

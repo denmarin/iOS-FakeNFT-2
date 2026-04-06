@@ -169,7 +169,7 @@ extension FavoriteNFTViewController: UICollectionViewDataSource{
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: FavoriteNFTCollectionViewCell = collectionView.dequeueReusableCell(indexPath: indexPath)
-        cell.config(imageName: nftArr[indexPath.row].imageAssetName, nftTitle: nftArr[indexPath.row].title, rating: nftArr[indexPath.row].rating, price: nftArr[indexPath.row].priceText)
+      //  cell.config(imageName: nftArr[indexPath.row].imageAssetName, nftTitle: nftArr[indexPath.row].title, rating: nftArr[indexPath.row].rating, price: nftArr[indexPath.row].priceText)
         
         cell.onLikeTapped = { [weak self] in
             guard let self else { return }

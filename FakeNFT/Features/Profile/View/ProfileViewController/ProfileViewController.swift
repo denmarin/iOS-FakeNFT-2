@@ -1,5 +1,6 @@
 import UIKit
 import Combine
+import Kingfisher
 
 enum ProfileRow: Int, CaseIterable {
     case myNfts = 0
@@ -211,11 +212,13 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
         descriptionLabel.text = data.header.description
         webSiteLabel.text = data.header.website
         
-        let imageName = data.header.avatarAssetName
-        if let image = UIImage(named: imageName) {
-            profileImageView.image = image
+        if let url = data.header.avatarAssetName {
+            profileImageView.kf.setImage(
+                with: url,
+                placeholder: UIImage(resource: .profileImagePlaceholder),
+                options: [.transition(.fade(0.2))]
+            )
         }
-        
         profileTable.reloadData()
     }
     
@@ -270,9 +273,9 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource{
         let count: Int
         switch row {
         case .myNfts:
-            count = currentData?.myNfts.count ?? 0
+            count = currentData?.myNftsIds.count ?? 0
         case .favorites:
-            count = currentData?.favorites.count ?? 0
+            count = currentData?.favoritesIds.count ?? 0
         }
         cell.configure(text: row.title, nftCount: count)
         return cell

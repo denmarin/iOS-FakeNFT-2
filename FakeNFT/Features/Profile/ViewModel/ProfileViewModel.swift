@@ -19,7 +19,7 @@ final class ProfileViewModelImpl: ProfileViewModel {
     func onAppear() {
         stateSubject.send(.loading)
         Task {
-            let data = await provider.loadProfile()
+            let data = try await provider.loadProfile()
             self.screenData = data
             self.stateSubject.send(.content(data))
         }
@@ -49,6 +49,8 @@ final class ProfileViewModelImpl: ProfileViewModel {
         
         let updatedData = ProfileScreenData(
             header: newHeader,
+            myNftsIds: currentData.myNftsIds,
+            favoritesIds: currentData.favoritesIds,
             myNfts: currentData.myNfts,
             favorites: currentData.favorites
         )
@@ -58,15 +60,15 @@ final class ProfileViewModelImpl: ProfileViewModel {
     }
     
     func updateFavorite(_ newFavorites: [NftCard]){
-        guard let currentData = screenData else { return }
-        
-        let updatedData = ProfileScreenData(
-            header: currentData.header,
-            myNfts: currentData.myNfts,
-            favorites: newFavorites
-        )
-        
-        self.screenData = updatedData
-        self.stateSubject.send(.content(updatedData))
+//        guard let currentData = screenData else { return }
+//        
+//        let updatedData = ProfileScreenData(
+//            header: currentData.header,
+//            myNfts: currentData.myNfts,
+//            favorites: newFavorites
+//        )
+//        
+//        self.screenData = updatedData
+//        self.stateSubject.send(.content(updatedData))
     }
 }
