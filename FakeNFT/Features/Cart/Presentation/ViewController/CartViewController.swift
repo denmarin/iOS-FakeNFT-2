@@ -37,7 +37,8 @@ final class CartViewController: UIViewController {
     // MARK: - Overrides Methods
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .ypWhite 
+        view.backgroundColor = .ypWhite
+        bottomView.alpha = 0
         
         setupNavBar()
         setupLayout()
@@ -54,7 +55,9 @@ final class CartViewController: UIViewController {
             target: self,
             action: #selector(filterButtonTapped)
         )
-        filterButton.tintColor = UIColor(resource: .ypBlack)
+        
+        filterButton.tintColor = UIColor(resource: .ypBlack).withAlphaComponent(0)
+        filterButton.isEnabled = false
         navigationItem.rightBarButtonItem = filterButton
     }
     
@@ -83,6 +86,20 @@ final class CartViewController: UIViewController {
                 count: self.viewModel.totalAmount,
                 price: self.viewModel.totalPrice
             )
+            
+            UIView.animate(withDuration: 0.3) {
+                self.bottomView.alpha = 1
+                self.navigationItem.rightBarButtonItem?.tintColor = UIColor(resource: .ypBlack)
+            }
+            self.navigationItem.rightBarButtonItem?.isEnabled = true
+        }
+        
+        viewModel.onLoadingChange = { isLoading in
+            if isLoading {
+                UIBlockingProgressHUD.show()
+            } else {
+                UIBlockingProgressHUD.dismiss()
+            }
         }
     }
     
