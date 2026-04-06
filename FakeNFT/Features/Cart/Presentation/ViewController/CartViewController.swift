@@ -37,7 +37,7 @@ final class CartViewController: UIViewController {
     // MARK: - Overrides Methods
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .ypWhite 
         
         setupNavBar()
         setupLayout()
@@ -56,8 +56,6 @@ final class CartViewController: UIViewController {
         )
         filterButton.tintColor = UIColor(resource: .ypBlack)
         navigationItem.rightBarButtonItem = filterButton
-        
-        navigationItem.title = nil
     }
     
     private func setupLayout() {
@@ -79,13 +77,12 @@ final class CartViewController: UIViewController {
     
     private func bindViewModel() {
         viewModel.onChange = { [weak self] in
-            Task { @MainActor in
-                self?.tableView.reloadData()
-                self?.bottomView.configure(
-                    count: self?.viewModel.totalAmount ?? 0,
-                    price: self?.viewModel.totalPrice ?? 0.0
-                )
-            }
+            guard let self else { return }
+            self.tableView.reloadData()
+            self.bottomView.configure(
+                count: self.viewModel.totalAmount,
+                price: self.viewModel.totalPrice
+            )
         }
     }
     
@@ -98,7 +95,7 @@ final class CartViewController: UIViewController {
 // MARK: - Extensions
 extension CartViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        viewModel.totalAmount
+        return viewModel.items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -109,7 +106,8 @@ extension CartViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
-        cell.configure(with: viewModel.items[indexPath.row])
+        let nft = viewModel.items[indexPath.row]
+        cell.configure(with: nft)
         return cell
     }
 }

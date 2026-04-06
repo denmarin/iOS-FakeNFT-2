@@ -12,6 +12,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 12
+        imageView.backgroundColor = .ypLightGrey
         return imageView
     }()
     
@@ -109,25 +110,26 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     }
     
     func setImage(url: URL?) {
-        let placeholderName = AssetImages.System.placeholder
-        let placeholder = UIImage(systemName: placeholderName)
+        nftImageView.kf.cancelDownloadTask()
         
-        if let urlString = url?.absoluteString, urlString.hasPrefix("local://") {
-            let imageName = urlString.replacingOccurrences(of: "local://", with: "")
-            
-            if let localImage = UIImage(named: imageName) {
-                nftImageView.image = localImage
-                nftImageView.contentMode = .scaleAspectFill
-                nftImageView.tintColor = nil
-                nftImageView.backgroundColor = .clear
-                return
+        let processor = RoundCornerImageProcessor(cornerRadius: 12)
+        nftImageView.kf.setImage(
+            with: url,
+            placeholder: AssetImages.System.placeholder,
+            options: [
+                .processor(processor),
+                .transition(.fade(0.3)),
+                .cacheOriginalImage
+            ]
+        ) { result in
+            switch result {
+            case .success(_):
+                self.nftImageView.contentMode = .scaleAspectFill
+            case .failure(_):
+                self.nftImageView.contentMode = .center
+                self.nftImageView.image = AssetImages.System.noSign
             }
         }
-        
-        nftImageView.image = placeholder
-        nftImageView.contentMode = .center
-        nftImageView.tintColor = .systemGray4
-        nftImageView.backgroundColor = .systemGray6
     }
     
     // MARK: - Private Methods

@@ -1,27 +1,34 @@
 import Foundation
 
+@MainActor
 final class CartViewModel {
     // MARK: - Public Properties
+    var totalAmount: Int { items.count }
+    var totalPrice: Double { items.reduce(0) { $0 + $1.price } }
+    
     var onChange: (() -> Void)?
     
-    var items: [Nft] {
-        nfts
-    }
-    
-    var totalPrice: Double {
-        nfts.reduce(0) { $0 + $1.price }
-    }
-    
-    var totalAmount: Int {
-        nfts.count
-    }
-    
     // MARK: - Private Properties
-    private var nfts: [Nft] = []
+    private(set) var items: [Nft] = [] {
+        didSet { onChange?() }
+    }
+    
+    private let service: CartService
+    
+    // MARK: - Init
+    init(service: CartService = CartServiceImpl()) {
+        self.service = service
+    }
     
     // MARK: - Public Methods
     func loadData() {
-        self.nfts = MockData.nfts
-        onChange?()
+        Task {
+            do {
+                let fetchedNfts = try await service.loadCart()
+                self.items = fetchedNfts
+            } catch {
+                assertionFailure("Cart loading error: \(error)")
+            }
+        }
     }
 }
