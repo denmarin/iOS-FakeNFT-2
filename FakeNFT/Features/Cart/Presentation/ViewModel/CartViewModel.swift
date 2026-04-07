@@ -15,8 +15,8 @@ final class CartViewModel {
     }
     
     private(set) var isLoading: Bool = false {
-            didSet { onLoadingChange?(isLoading) }
-        }
+        didSet { onLoadingChange?(isLoading) }
+    }
     
     private let service: CartService
     
@@ -37,6 +37,24 @@ final class CartViewModel {
             } catch {
                 self.isLoading = false
                 assertionFailure("Cart loading error: \(error)")
+            }
+        }
+    }
+    
+    func removeNft(_ nft: Nft) {
+        isLoading = true
+        
+        let newItems = items.filter { $0.id != nft.id }
+        let updatedIds = newItems.map { $0.id }
+        
+        Task {
+            do {
+                _ = try await service.updateCart(with: updatedIds)
+                self.items = newItems
+                self.isLoading = false
+            } catch {
+                self.isLoading = false
+                print("Failed to remove NFT: \(error)")
             }
         }
     }

@@ -2,6 +2,7 @@ import Foundation
 
 protocol CartService {
     func loadCart() async throws -> [Nft]
+    func updateCart(with nftIds: [String]) async throws -> Order
 }
 
 final class CartServiceImpl: CartService {
@@ -33,5 +34,10 @@ final class CartServiceImpl: CartService {
             
             return fetchedNfts.sorted { $0.id < $1.id }
         }
+    }
+    
+    func updateCart(with nftIds: [String]) async throws -> Order {
+        let request = OrderUpdateRequest(nfts: nftIds)
+        return try await networkClient.send(request: request, type: Order.self)
     }
 }

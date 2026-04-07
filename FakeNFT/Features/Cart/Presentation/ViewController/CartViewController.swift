@@ -125,6 +125,30 @@ extension CartViewController: UITableViewDataSource {
         
         let nft = viewModel.items[indexPath.row]
         cell.configure(with: nft)
+        cell.delegate = self
         return cell
+    }
+}
+
+extension CartViewController: CartTableViewCellDelegate {
+    func didTapDeleteButton(on cell: CartTableViewCell) {
+        guard let indexPath = tableView.indexPath(for: cell) else { return }
+        let nft = viewModel.items[indexPath.row]
+        
+        showDeleteConfirmation(for: nft)
+    }
+    
+    private func showDeleteConfirmation(for nft: Nft) {
+        let deleteVC = DeleteNftViewController(nftImage: nft.images.first)
+        deleteVC.modalPresentationStyle = .overFullScreen
+        deleteVC.modalTransitionStyle = .crossDissolve
+        
+        deleteVC.completion = { [weak self] confirmed in
+            if confirmed {
+                self?.viewModel.removeNft(nft)
+            }
+        }
+        
+        present(deleteVC, animated: true)
     }
 }

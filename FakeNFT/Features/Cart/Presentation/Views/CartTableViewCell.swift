@@ -1,7 +1,13 @@
 import UIKit
 import Kingfisher
 
+protocol CartTableViewCellDelegate: AnyObject {
+    func didTapDeleteButton(on cell: CartTableViewCell)
+}
+
 final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
+    weak var delegate: CartTableViewCellDelegate?
+    
     // MARK: - Static Properties
     static let identifier = "CartCell"
     
@@ -51,9 +57,10 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     }()
     
     private lazy var deleteButton: UIButton = {
-        let button = UIButton(type: .system)
+        let button = UIButton(type: .custom)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setImage(UIImage(resource: .cartImageDelete), for: .normal)
+        button.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
         button.tintColor = .ypBlack
         return button
     }()
@@ -209,5 +216,10 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         formatter.decimalSeparator = ","
         let value = formatter.string(from: NSNumber(value: price)) ?? "\(price)"
         return "\(value) ETH"
+    }
+    
+    // MARK: - @objc Methods
+    @objc private func deleteTapped() {
+        delegate?.didTapDeleteButton(on: self)
     }
 }
