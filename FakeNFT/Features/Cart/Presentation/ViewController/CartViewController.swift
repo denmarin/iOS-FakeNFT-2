@@ -1,6 +1,6 @@
 import UIKit
 
-final class CartViewController: UIViewController {
+final class CartViewController: UIViewController, ErrorView {
     // MARK: - Private Properties
     private let viewModel: CartViewModel
     
@@ -21,6 +21,17 @@ final class CartViewController: UIViewController {
         let view = CartBottomView()
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
+    }()
+    
+    private lazy var  emptyCartLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Корзина пуста"
+        label.font = .systemFont(ofSize: 17, weight: .bold)
+        label.textColor = UIColor(resource: .ypBlack)
+        label.textAlignment = .center
+        label.isHidden = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     // MARK: - Init
@@ -64,6 +75,7 @@ final class CartViewController: UIViewController {
     private func setupLayout() {
         view.addSubview(tableView)
         view.addSubview(bottomView)
+        view.addSubview(emptyCartLabel)
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
@@ -74,31 +86,54 @@ final class CartViewController: UIViewController {
             bottomView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bottomView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            bottomView.heightAnchor.constraint(equalToConstant: 76)
+            bottomView.heightAnchor.constraint(equalToConstant: 76),
+            
+            emptyCartLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyCartLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
     
     private func bindViewModel() {
         viewModel.onChange = { [weak self] in
             guard let self else { return }
-            self.tableView.reloadData()
-            self.bottomView.configure(
-                count: self.viewModel.totalAmount,
-                price: self.viewModel.totalPrice
-            )
-            
-            UIView.animate(withDuration: 0.3) {
-                self.bottomView.alpha = 1
-                self.navigationItem.rightBarButtonItem?.tintColor = UIColor(resource: .ypBlack)
-            }
-            self.navigationItem.rightBarButtonItem?.isEnabled = true
+            self.updateUI()
         }
         
-        viewModel.onLoadingChange = { isLoading in
+        viewModel.onLoadingChange = { [weak self] isLoading in
             if isLoading {
                 UIBlockingProgressHUD.show()
             } else {
                 UIBlockingProgressHUD.dismiss()
+                self?.updateUI()
+            }
+        }
+        
+        viewModel.onError = { [weak self] errorModel in
+            self?.showError(errorModel)
+        }
+    }
+    
+    private func updateUI() {
+        guard !viewModel.isLoading else { return }
+        
+        let isEmpty = viewModel.items.isEmpty
+        
+        emptyCartLabel.isHidden = !isEmpty
+        tableView.isHidden = isEmpty
+        bottomView.isHidden = isEmpty
+        
+        navigationItem.rightBarButtonItem?.isEnabled = !isEmpty
+        navigationItem.rightBarButtonItem?.tintColor = isEmpty ? .clear : UIColor(resource: .ypBlack)
+        
+        if !isEmpty {
+            tableView.reloadData()
+            bottomView.configure(
+                count: viewModel.totalAmount,
+                price: viewModel.totalPrice
+            )
+            
+            UIView.animate(withDuration: 0.3) {
+                self.bottomView.alpha = 1
             }
         }
     }
@@ -112,7 +147,7 @@ final class CartViewController: UIViewController {
 // MARK: - Extensions
 extension CartViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.items.count
+        viewModel.items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

@@ -8,6 +8,7 @@ final class CartViewModel {
     
     var onChange: (() -> Void)?
     var onLoadingChange: ((Bool) -> Void)?
+    var onError: ((ErrorModel) -> Void)?
     
     // MARK: - Private Properties
     private(set) var items: [Nft] = [] {
@@ -36,7 +37,12 @@ final class CartViewModel {
                 self.isLoading = false
             } catch {
                 self.isLoading = false
-                assertionFailure("Cart loading error: \(error)")
+                let errorModel = ErrorModel(
+                    message: "Не удалось загрузить корзину",
+                    actionText: "Повторить",
+                    action: { [weak self] in self?.loadData() }
+                )
+                onError?(errorModel)
             }
         }
     }
@@ -54,7 +60,14 @@ final class CartViewModel {
                 self.isLoading = false
             } catch {
                 self.isLoading = false
-                print("Failed to remove NFT: \(error)")
+                let errorModel = ErrorModel(
+                    message: "Не удалось удалить NFT из корзины",
+                    actionText: "Повторить",
+                    action: { [weak self] in
+                        self?.removeNft(nft)
+                    }
+                )
+                onError?(errorModel)
             }
         }
     }
