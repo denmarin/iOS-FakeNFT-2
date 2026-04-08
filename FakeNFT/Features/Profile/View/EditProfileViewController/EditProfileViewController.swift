@@ -1,6 +1,10 @@
 import UIKit
+import Kingfisher
 
-final class EditProfileViewController: UIViewController{
+final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
+    let activityIndicator = UIActivityIndicatorView(style: .large)
+
+    
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -107,7 +111,6 @@ final class EditProfileViewController: UIViewController{
             self?.viewModel.website = newText
         }
         
-        
         Task { [weak self] in
             guard let changes = self?.viewModel.$isChanged.values else { return }
             for await isChanged in changes {
@@ -116,19 +119,58 @@ final class EditProfileViewController: UIViewController{
         }
         
         Task { [weak self] in
-            guard let imageNames = self?.viewModel.$avatarAssetName.values else { return }
-            for await name in imageNames {
-                let image = UIImage(named: name) ?? UIImage(resource: .profileImagePlaceholder)
-                self?.profileImageView.image = image
+            guard let urlStream = self?.viewModel.$avatar.values else { return }
+            
+            for await url in urlStream {
+                self?.profileImageView.kf.setImage(
+                    with: url,
+                    placeholder: UIImage(resource: .profileImagePlaceholder),
+                    options: [.transition(.fade(0.2))]
+                )
             }
         }
+        
+        Task { [weak self] in
+            guard let states = self?.viewModel.$state.values else { return }
+            
+            for await state in states {
+                switch state {
+                case .idle:
+                    self?.hideLoading()
+                    self?.saveButton.isEnabled = true
+                    
+                case .loading:
+                    self?.showLoading()
+                    self?.saveButton.isEnabled = false
+                    
+                case .error(let message):
+                    self?.hideLoading()
+                    self?.saveButton.isEnabled = true
+                    let errorModel = ErrorModel(
+                        message: message,
+                        actionText: "Повторить"
+                    ) { [weak self] in
+                        self?.viewModel.didTapSave()
+                    }
+                    self?.showError(errorModel)
+                }
+            }
+        }
+
     }
     
     private func initWithViewModel(){
-        profileImageView.image = UIImage(named: viewModel.avatarAssetName)
         nameFields.textField.text = viewModel.name
         descriptionFields.textView.text = viewModel.description
         siteFields.textField.text = viewModel.website
+        
+        if let url = viewModel.avatar {
+            profileImageView.kf.setImage(
+                with: url,
+                placeholder: UIImage(resource: .profileImagePlaceholder),
+                options: [.transition(.fade(0.2))]
+            )
+        }
     }
     
     private func setupScrollViewAndContentView() {
@@ -177,6 +219,13 @@ final class EditProfileViewController: UIViewController{
             mainStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             mainStackView.bottomAnchor.constraint(equalTo: saveButton.topAnchor, constant: -152)
         ])
+        
+        view.addSubview(activityIndicator)
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
     }
     
     private func setupPhotoView(){
@@ -222,9 +271,8 @@ final class EditProfileViewController: UIViewController{
         }
     }
     
-    @objc private func saveButtonDidTap(){
+    @objc private func saveButtonDidTap() {
         viewModel.didTapSave()
-        dismiss(animated: true)
     }
     
     @objc private func photoDidTap() {
@@ -251,12 +299,13 @@ final class EditProfileViewController: UIViewController{
         let alert = UIAlertController(title: "Ссылка на фото", message: nil, preferredStyle: .alert)
         
         alert.addTextField { textField in
-            textField.placeholder = "Введите название ассета или URL"
+            textField.placeholder = "Введите название URL изображения"
         }
         
         let okAction = UIAlertAction(title: "ОК", style: .default) { [weak self] _ in
             if let text = alert.textFields?.first?.text, !text.isEmpty {
-                self?.viewModel.updateAvatar(with: text)
+                guard let url = URL(string: text) else { return }
+                self?.viewModel.updateAvatar(with: url)
             }
         }
         

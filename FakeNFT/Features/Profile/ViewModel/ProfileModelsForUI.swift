@@ -4,7 +4,7 @@ struct ProfileHeader: Equatable {
     let name: String
     let description: String
     let website: String?
-    let avatarAssetName: URL?
+    let avatar: URL?
 }
 
 struct NftCard: Equatable, Identifiable {
@@ -12,7 +12,7 @@ struct NftCard: Equatable, Identifiable {
     let title: String
     let priceText: Double
     let rating: Int
-    let imageAssetName: URL?
+    let image: URL?
     let authorName: String
 }
 

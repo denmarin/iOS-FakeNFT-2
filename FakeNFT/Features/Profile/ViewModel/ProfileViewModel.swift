@@ -17,11 +17,21 @@ final class ProfileViewModelImpl: ProfileViewModel {
     }
     
     func onAppear() {
-        stateSubject.send(.loading)
+        if screenData == nil {
+            stateSubject.send(.loading)
+        }
+
         Task {
-            let data = try await provider.loadProfile()
-            self.screenData = data
-            self.stateSubject.send(.content(data))
+            do {
+                let data = try await provider.loadProfile()
+                self.screenData = data
+                
+                self.stateSubject.send(.content(data))
+            } catch {
+                if screenData == nil {
+                    stateSubject.send(.error(error.localizedDescription))
+                }
+            }
         }
     }
     
@@ -37,7 +47,7 @@ final class ProfileViewModelImpl: ProfileViewModel {
     
     func didTapEdit() {
         guard let data = screenData else { return }
-        routeSubject.send(.editProfile(data.header))
+        routeSubject.send(.editProfile(data))
     }
     
     func didTapWebsite(){

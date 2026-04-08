@@ -106,6 +106,10 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
         view.backgroundColor = .ypWhite
         setupUI()
         setupBindings()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         viewModel.onAppear()
     }
     
@@ -158,7 +162,7 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapWebsite))
         webSiteLabel.addGestureRecognizer(tapGesture)
     }
-
+    
     @objc private func didTapWebsite() {
         viewModel.didTapWebsite()
     }
@@ -212,7 +216,7 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
         descriptionLabel.text = data.header.description
         webSiteLabel.text = data.header.website
         
-        if let url = data.header.avatarAssetName {
+        if let url = data.header.avatar {
             profileImageView.kf.setImage(
                 with: url,
                 placeholder: UIImage(resource: .profileImagePlaceholder),
@@ -224,9 +228,11 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
     
     private func handleRoute(_ route: ProfileRoute) {
         switch route {
-        case .editProfile(let currentHeader):
-            let editVM = EditProfileViewModel(header: currentHeader) { [weak self] updatedHeader in
+        case .editProfile(let profileScreenData):
+            let service = ProfileServiceImp()
+            let editVM = EditProfileViewModel(header: profileScreenData.header,provider: service,currentLikes: profileScreenData.favoritesIds) { [weak self] updatedHeader in
                 self?.viewModel.updateHeader(updatedHeader)
+                self?.presentedViewController?.dismiss(animated: true)
             }
             
             let editVC = EditProfileViewController(viewModel: editVM)

@@ -23,8 +23,8 @@ final class AppTabBarController: UITabBarController {
 
         let cartController = UIViewController()
         
-        let profileMockService = ProfileServiceImp()
-        let profileViewModel = ProfileViewModelImpl(provider: profileMockService)
+        let profileService = ProfileServiceImp()
+        let profileViewModel = ProfileViewModelImpl(provider: profileService)
         let profileController = ProfileViewController(viewModel: profileViewModel)
         
         let statsController = UIViewController()

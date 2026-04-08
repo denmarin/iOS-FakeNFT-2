@@ -3,6 +3,7 @@ import Foundation
 
 protocol ProfileDataProvider {
     func loadProfile() async throws -> ProfileScreenData
+    func updateProfile(name: String, description: String, website: String, avatar: String, likes: [String]) async throws -> ProfileScreenData
 }
 
 //final class ProfileMockService: ProfileDataProvider {
@@ -37,21 +38,45 @@ final class ProfileServiceImp: ProfileDataProvider {
     }
     
     func loadProfile() async throws -> ProfileScreenData {
-        let profileDto = try await networkClient.send(request: ProfileRequest(), type: Profile.self)
-        
-        print(profileDto)
-        
+        let profileDto = try await networkClient.send(request: ProfileGetRequest(), type: Profile.self)
+                
         let profileHeader = ProfileHeader(
             name: profileDto.name,
             description: profileDto.description ?? "",
             website: profileDto.website ?? "",
-            avatarAssetName: profileDto.avatar)
+            avatar: profileDto.avatar)
         
         return ProfileScreenData(
             header: profileHeader,
             myNftsIds: profileDto.nfts,
             favoritesIds: profileDto.likes,
             myNfts: [],
-            favorites: [])
+            favorites: []
+        )
+    }
+    
+    func updateProfile(name: String, description: String, website: String, avatar: String, likes: [String]) async throws -> ProfileScreenData {
+        
+        let dto = ProfileUpdateDto(name: name, description: description, avatar: avatar, website: website, likes: likes)
+        
+        let request = ProfilePutRequest(dto: dto)
+        
+        print(request)
+        
+        let profileResponse = try await networkClient.send(request: request, type: Profile.self)
+        
+        let profileHeader = ProfileHeader(
+            name: profileResponse.name,
+            description: profileResponse.description ?? "",
+            website: profileResponse.website ?? "",
+            avatar: profileResponse.avatar)
+        
+        return ProfileScreenData(
+            header: profileHeader,
+            myNftsIds: profileResponse.nfts,
+            favoritesIds: profileResponse.likes,
+            myNfts: [],
+            favorites: []
+        )
     }
 }
