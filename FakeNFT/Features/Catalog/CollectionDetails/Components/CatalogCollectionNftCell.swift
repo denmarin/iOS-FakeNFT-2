@@ -15,12 +15,12 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
         static let nameTrailingSpacing: CGFloat = 6
     }
 
-    private static let favoriteOnIcon = resolveIcon(named: "favoriteImageOn")
-    private static let favoriteOffIcon = resolveIcon(named: "favoriteImageOff")
-    private static let cartAddIcon = resolveIcon(named: "cartImageAdd")
-    private static let cartDeleteIcon = resolveIcon(named: "cartImageDelete")
-    private static let starOnIcon = resolveIcon(named: "startImageOn")
-    private static let starOffIcon = resolveIcon(named: "startImageOff")
+    private static let favoriteOnIcon = resolveIcon(image: UIImage(resource: .favoriteImageOn))
+    private static let favoriteOffIcon = resolveIcon(image: UIImage(resource: .favoriteImageOff))
+    private static let cartAddIcon = resolveIcon(image: UIImage(resource: .cartImageAdd))
+    private static let cartDeleteIcon = resolveIcon(image: UIImage(resource: .cartImageDelete))
+    private static let starOnIcon = resolveIcon(image: UIImage(resource: .startImageOn))
+    private static let starOffIcon = resolveIcon(image: UIImage(resource: .startImageOff))
 
     var onFavoriteTap: (() -> Void)?
     var onCartTap: (() -> Void)?
@@ -104,8 +104,9 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
         buildLayout()
     }
 
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
 
     override func prepareForReuse() {
@@ -236,9 +237,8 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
         ])
     }
 
-    private static func resolveIcon(named name: String) -> UIImage? {
-        guard let image = UIImage(named: name) else { return nil }
-        return trimTransparentInsets(from: image)
+    private static func resolveIcon(image: UIImage) -> UIImage? {
+        trimTransparentInsets(from: image)
     }
 
     private static func trimTransparentInsets(from image: UIImage) -> UIImage {

@@ -22,6 +22,10 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         static let preferredGridItemWidth: CGFloat = 108
     }
 
+    private enum Icons {
+        static let back = "chevron.left"
+    }
+
     private let viewModel: CatalogCollectionDetailsViewModel
     private var previousNavigationBarHidden: Bool?
 
@@ -40,7 +44,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
             pointSize: Layout.backIconPointSize,
             weight: .semibold
         )
-        button.setImage(UIImage(systemName: "chevron.left", withConfiguration: symbolConfiguration), for: .normal)
+        button.setImage(UIImage(systemName: Icons.back, withConfiguration: symbolConfiguration), for: .normal)
         button.tintColor = .black
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
@@ -143,8 +147,9 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
 
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
 
     override func viewDidLoad() {

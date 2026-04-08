@@ -26,6 +26,7 @@ final class CatalogAssembly {
                 guard let navigationController = viewController?.navigationController else { return }
                 let detailsAssembly = CatalogCollectionDetailsAssembly(nftsProvider: collectionNftsProvider)
                 let detailsViewController = detailsAssembly.build(collection: collection)
+                detailsViewController.hidesBottomBarWhenPushed = true
                 navigationController.pushViewController(detailsViewController, animated: true)
             }
         }

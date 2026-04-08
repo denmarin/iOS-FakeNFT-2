@@ -30,8 +30,9 @@ final class CatalogViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
 
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
 
     override func viewDidLoad() {
@@ -52,7 +53,7 @@ final class CatalogViewController: UIViewController {
         navigationItem.title = nil
 
         let sortItem = UIBarButtonItem(
-            image: UIImage(named: "sortImage"),
+            image: UIImage(resource: .sort),
             style: .plain,
             target: self,
             action: #selector(didTapSort)
