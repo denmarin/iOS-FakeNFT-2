@@ -5,7 +5,7 @@ struct Profile: Sendable, Hashable {
     let name: String
     let avatar: URL?
     let description: String?
-    let website: URL?
-    let nftIDs: [String]
-    let likedNftIDs: [String]
+    let website: String?
+    let nfts: [String]
+    let likes: [String]
 }

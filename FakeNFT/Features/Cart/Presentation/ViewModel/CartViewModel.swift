@@ -20,6 +20,21 @@ final class CartViewModel {
     }
     
     private let service: CartService
+    private let sortTypeKey = "CartSortTypeKey"
+    private let userDefaults = UserDefaults.standard
+    
+    private var currentSortType: CartSortType {
+        get {
+            guard let savedValue = userDefaults.string(forKey: sortTypeKey),
+                  let type = CartSortType(rawValue: savedValue) else {
+                return .name
+            }
+            return type
+        }
+        set {
+            userDefaults.set(newValue.rawValue, forKey: sortTypeKey)
+        }
+    }
     
     // MARK: - Init
     init(service: CartService = CartServiceImpl()) {
@@ -34,6 +49,7 @@ final class CartViewModel {
             do {
                 let fetchedNfts = try await service.loadCart()
                 self.items = fetchedNfts
+                self.applySort()
                 self.isLoading = false
             } catch {
                 self.isLoading = false
@@ -69,6 +85,23 @@ final class CartViewModel {
                 )
                 onError?(errorModel)
             }
+        }
+    }
+    
+    func sort(by type: CartSortType) {
+        currentSortType = type
+        applySort()
+    }
+    
+    // MARK: - Private Methods
+    private func applySort() {
+        switch currentSortType {
+        case .price:
+            items.sort { $0.price < $1.price }
+        case .rating:
+            items.sort { $0.rating > $1.rating }
+        case .name:
+            items.sort { $0.name.lowercased() < $1.name.lowercased() }
         }
     }
 }

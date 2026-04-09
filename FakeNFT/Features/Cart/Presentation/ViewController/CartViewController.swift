@@ -140,7 +140,27 @@ final class CartViewController: UIViewController, ErrorView {
     
     // MARK: - @objc Methods
     @objc private func filterButtonTapped() {
-        // TODO: Process code
+        let alert = UIAlertController(
+            title: "Сортировка",
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+        
+        alert.addAction(UIAlertAction(title: "По цене", style: .default) { [weak self] _ in
+            self?.viewModel.sort(by: .price)
+        })
+        
+        alert.addAction(UIAlertAction(title: "По рейтингу", style: .default) { [weak self] _ in
+            self?.viewModel.sort(by: .rating)
+        })
+        
+        alert.addAction(UIAlertAction(title: "По названию", style: .default) { [weak self] _ in
+            self?.viewModel.sort(by: .name)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Закрыть", style: .cancel))
+        
+        present(alert, animated: true)
     }
 }
 
