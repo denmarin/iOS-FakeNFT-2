@@ -3,20 +3,23 @@ import UIKit
 final class CatalogAssembly {
 
     private let onDidSelectCollection: ((CatalogCollection) -> Void)?
+    private let networkClient: NetworkClient
 
     init(
         servicesAssembly _: ServicesAssembly,
         onDidSelectCollection: ((CatalogCollection) -> Void)? = nil
     ) {
         self.onDidSelectCollection = onDidSelectCollection
+        self.networkClient = DefaultNetworkClient()
     }
 
     @MainActor
     func build() -> UIViewController {
         let collectionsProvider = makeCollectionsProvider()
         let collectionNftsProvider = makeCollectionNftsProvider()
+        let userActionsProvider = makeUserActionsProvider()
 
-        let viewModel = CatalogViewModel(provider: collectionsProvider)
+        let viewModel = CatalogViewModel(collectionsProvider: collectionsProvider)
         let viewController = CatalogViewController(viewModel: viewModel)
 
         if let onDidSelectCollection {
@@ -24,7 +27,10 @@ final class CatalogAssembly {
         } else {
             viewModel.onDidSelectCollection = { [weak viewController] collection in
                 guard let navigationController = viewController?.navigationController else { return }
-                let detailsAssembly = CatalogCollectionDetailsAssembly(nftsProvider: collectionNftsProvider)
+                let detailsAssembly = CatalogCollectionDetailsAssembly(
+                    nftsProvider: collectionNftsProvider,
+                    userActionsProvider: userActionsProvider
+                )
                 let detailsViewController = detailsAssembly.build(collection: collection)
                 detailsViewController.hidesBottomBarWhenPushed = true
                 navigationController.pushViewController(detailsViewController, animated: true)
@@ -35,12 +41,14 @@ final class CatalogAssembly {
     }
 
     private func makeCollectionsProvider() -> CatalogCollectionsProviding {
-        // TODO: replace mock provider with API provider when catalog endpoint is ready.
-        return MockCatalogCollectionsProvider(loadingDelay: .milliseconds(650))
+        CatalogService(networkClient: networkClient)
     }
 
     private func makeCollectionNftsProvider() -> CatalogCollectionNftsProviding {
-        // TODO: replace mock provider with API provider when collection NFT endpoint is ready.
-        return MockCatalogCollectionNftsProvider(loadingDelay: .milliseconds(450))
+        CatalogCollectionNftsService(networkClient: networkClient)
+    }
+
+    private func makeUserActionsProvider() -> CatalogUserActionsProviding {
+        CatalogUserActionsService(networkClient: networkClient)
     }
 }

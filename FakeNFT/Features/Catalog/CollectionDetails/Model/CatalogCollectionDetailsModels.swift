@@ -7,7 +7,7 @@ struct CatalogCollectionDetailsHeaderViewModel: Sendable {
     let authorName: String
 }
 
-struct CatalogCollectionNftCellViewModel: Sendable {
+struct CatalogCollectionNftCellViewModel: Sendable, Equatable {
     let id: String
     let name: String
     let imageURL: URL?

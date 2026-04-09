@@ -3,8 +3,8 @@ import Foundation
 enum CatalogViewState {
     case loading
     case content([CatalogCollectionCellViewModel])
-    case presentSortOptions([CatalogSortOption])
-    case failed(message: String)
+    case empty
+    case error(message: String)
 }
 
 struct CatalogCollectionCellViewModel: Equatable {
@@ -20,20 +20,24 @@ struct CatalogCollectionCellViewModel: Equatable {
 
 @MainActor
 final class CatalogViewModel {
+    private enum Constants {
+        static let loadingErrorMessage = "Не удалось загрузить каталог. Попробуйте снова."
+    }
 
     var onStateChange: ((CatalogViewState) -> Void)?
+    var onPresentSortOptions: (([CatalogSortOption]) -> Void)?
     var onDidSelectCollection: ((CatalogCollection) -> Void)?
 
-    private let provider: CatalogCollectionsProviding
+    private let collectionsProvider: CatalogCollectionsProviding
     private var loadingTask: Task<Void, Never>?
     private var allCollections: [CatalogCollection] = []
     private var displayedCollections: [CatalogCollection] = []
     private var selectedSortOption: CatalogSortOption?
 
     init(
-        provider: CatalogCollectionsProviding
+        collectionsProvider: CatalogCollectionsProviding
     ) {
-        self.provider = provider
+        self.collectionsProvider = collectionsProvider
     }
 
     deinit {
@@ -48,13 +52,12 @@ final class CatalogViewModel {
         loadCollections()
     }
 
-    private func setCollections(_ collections: [CatalogCollection]) {
-        allCollections = collections
-        applySortAndPublish()
+    func retryLoading() {
+        loadCollections()
     }
 
     func didTapSort() {
-        onStateChange?(.presentSortOptions(CatalogSortOption.allCases))
+        onPresentSortOptions?(CatalogSortOption.allCases)
     }
 
     func didSelectSortOption(_ option: CatalogSortOption) {
@@ -74,17 +77,30 @@ final class CatalogViewModel {
         loadingTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let collections = try await self.provider.fetchCollections()
+                let collections = try await collectionsProvider.fetchCollections { [weak self] partialCollections in
+                    guard let self else { return }
+                    self.publishCollectionsIfNeeded(partialCollections)
+                }
                 guard !Task.isCancelled else { return }
-                self.setCollections(collections)
+                self.publishCollectionsIfNeeded(collections, forcePublishWhenUnchanged: collections.isEmpty)
             } catch is CancellationError {
                 return
             } catch {
-                self.onStateChange?(
-                    .failed(message: "Не удалось загрузить каталог. Попробуйте снова.")
-                )
+                if self.allCollections.isEmpty {
+                    self.onStateChange?(.error(message: Constants.loadingErrorMessage))
+                }
             }
         }
+    }
+
+    private func publishCollectionsIfNeeded(
+        _ collections: [CatalogCollection],
+        forcePublishWhenUnchanged: Bool = false
+    ) {
+        let shouldPublish = forcePublishWhenUnchanged || allCollections != collections
+        allCollections = collections
+        guard shouldPublish else { return }
+        applySortAndPublish()
     }
 
     private func applySortAndPublish() {
@@ -93,6 +109,12 @@ final class CatalogViewModel {
         } else {
             displayedCollections = allCollections
         }
+
+        guard !displayedCollections.isEmpty else {
+            onStateChange?(.empty)
+            return
+        }
+
         let cellModels = displayedCollections.map { collection in
             CatalogCollectionCellViewModel(
                 id: collection.id,

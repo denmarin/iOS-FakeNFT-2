@@ -1,4 +1,5 @@
 import UIKit
+import Kingfisher
 
 final class CatalogCollectionDetailsViewController: UIViewController {
     private enum Layout {
@@ -20,6 +21,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         static let gridLineSpacing: CGFloat = 16
         static let gridColumnCount: CGFloat = 3
         static let preferredGridItemWidth: CGFloat = 108
+        static let prefetchSkipCount = 9
     }
 
     private enum Icons {
@@ -141,6 +143,8 @@ final class CatalogCollectionDetailsViewController: UIViewController {
 
     private var collectionHeightConstraint: NSLayoutConstraint?
     private var cellModels: [CatalogCollectionNftCellViewModel] = []
+    private var prefetchedImageURLs: Set<URL> = []
+    private var imagePrefetchers: [UUID: ImagePrefetcher] = [:]
 
     init(viewModel: CatalogCollectionDetailsViewModel) {
         self.viewModel = viewModel
@@ -150,6 +154,10 @@ final class CatalogCollectionDetailsViewController: UIViewController {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         nil
+    }
+
+    deinit {
+        imagePrefetchers.values.forEach { $0.stop() }
     }
 
     override func viewDidLoad() {
@@ -288,16 +296,40 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         descriptionLabel.text = header.description
         authorNameLabel.text = header.authorName
 
+        coverImageView.kf.cancelDownloadTask()
+
         if let coverImage = UIImage(named: header.coverImageName) {
             coverImageView.image = coverImage
             coverImageView.isHidden = false
             coverOverlayView.backgroundColor = CatalogColors.overlaySoft
+        } else if let coverURL = makeRemoteURL(from: header.coverImageName) {
+            coverImageView.isHidden = false
+            coverOverlayView.backgroundColor = CatalogColors.overlaySoft
+            coverImageView.kf.indicatorType = .activity
+            let processor = DownsamplingImageProcessor(size: resolvedCoverTargetSize())
+            coverImageView.kf.setImage(
+                with: coverURL,
+                options: [
+                    .processor(processor),
+                    .scaleFactor(UIScreen.main.scale),
+                    .cacheOriginalImage,
+                    .backgroundDecode
+                ]
+            )
         } else {
             coverImageView.image = nil
             coverImageView.isHidden = true
             coverOverlayView.backgroundColor = CatalogColors.overlayStrong
             CatalogColors.applyCoverPlaceholder(to: coverColorColumns, seed: header.title)
         }
+    }
+
+    private func makeRemoteURL(from source: String) -> URL? {
+        guard let url = URL(string: source) else { return nil }
+        guard let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
+            return nil
+        }
+        return url
     }
 
     private func render(_ state: CatalogCollectionDetailsViewState) {
@@ -307,9 +339,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
 
         case .content(let models):
             hideLoading()
-            cellModels = models
-            collectionView.reloadData()
-            updateCollectionHeightIfNeeded()
+            applyContent(models)
 
         case .failed(let message):
             hideLoading()
@@ -317,10 +347,95 @@ final class CatalogCollectionDetailsViewController: UIViewController {
                 message: message,
                 actionText: NSLocalizedString("Error.repeat", comment: "")
             ) { [weak self] in
-                self?.viewModel.viewDidLoad()
+                self?.viewModel.retryLoading()
             }
             showError(errorModel)
         }
+    }
+
+    private func applyContent(_ models: [CatalogCollectionNftCellViewModel]) {
+        let previousModels = cellModels
+        cellModels = models
+
+        guard !previousModels.isEmpty else {
+            collectionView.reloadData()
+            updateCollectionHeightIfNeeded()
+            prefetchImages(for: models)
+            return
+        }
+
+        if let insertedIndexes = insertedIndexes(from: previousModels, to: models), !insertedIndexes.isEmpty {
+            let indexPaths = insertedIndexes.map { IndexPath(item: $0, section: 0) }
+            collectionView.performBatchUpdates {
+                collectionView.insertItems(at: indexPaths)
+            }
+        } else if let changedIndexes = changedIndexes(from: previousModels, to: models), !changedIndexes.isEmpty {
+            let indexPaths = changedIndexes.map { IndexPath(item: $0, section: 0) }
+            collectionView.performBatchUpdates {
+                collectionView.reloadItems(at: indexPaths)
+            }
+        } else if previousModels == models {
+            // No-op update from state sync, keep current layout and cells as is.
+        } else {
+            collectionView.reloadData()
+        }
+
+        updateCollectionHeightIfNeeded()
+        prefetchImages(for: models)
+    }
+
+    private func prefetchImages(for models: [CatalogCollectionNftCellViewModel]) {
+        let urls = Set(models.dropFirst(Layout.prefetchSkipCount).compactMap(\.imageURL))
+        let newURLs = urls.subtracting(prefetchedImageURLs)
+        guard !newURLs.isEmpty else {
+            return
+        }
+        prefetchedImageURLs.formUnion(newURLs)
+
+        let prefetcherID = UUID()
+        let prefetcher = ImagePrefetcher(
+            urls: Array(newURLs),
+            options: [
+                .scaleFactor(UIScreen.main.scale),
+                .backgroundDecode
+            ]
+        ) { [weak self] _, _, _ in
+            DispatchQueue.main.async {
+                self?.imagePrefetchers.removeValue(forKey: prefetcherID)
+            }
+        }
+        imagePrefetchers[prefetcherID] = prefetcher
+        prefetcher.start()
+    }
+
+    private func insertedIndexes(
+        from previous: [CatalogCollectionNftCellViewModel],
+        to current: [CatalogCollectionNftCellViewModel]
+    ) -> [Int]? {
+        guard current.count > previous.count else { return nil }
+
+        var prefixCount = 0
+        while prefixCount < previous.count,
+              previous[prefixCount] == current[prefixCount] {
+            prefixCount += 1
+        }
+
+        var suffixCount = 0
+        while suffixCount < previous.count - prefixCount,
+              previous[previous.count - 1 - suffixCount] == current[current.count - 1 - suffixCount] {
+            suffixCount += 1
+        }
+
+        guard prefixCount + suffixCount == previous.count else { return nil }
+        return Array(prefixCount..<(current.count - suffixCount))
+    }
+
+    private func changedIndexes(
+        from previous: [CatalogCollectionNftCellViewModel],
+        to current: [CatalogCollectionNftCellViewModel]
+    ) -> [Int]? {
+        guard previous.count == current.count else { return nil }
+        return previous.indices.filter { previous[$0] != current[$0] }
     }
 
     private func updateCollectionHeightIfNeeded() {
@@ -344,6 +459,14 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         var indicatorInsets = scrollView.verticalScrollIndicatorInsets
         indicatorInsets.bottom = bottomOverlayHeight
         scrollView.verticalScrollIndicatorInsets = indicatorInsets
+    }
+
+    private func resolvedCoverTargetSize() -> CGSize {
+        let size = coverView.bounds.size
+        guard size.width > 0, size.height > 0 else {
+            return CGSize(width: UIScreen.main.bounds.width, height: Layout.coverHeight)
+        }
+        return size
     }
 
     @objc

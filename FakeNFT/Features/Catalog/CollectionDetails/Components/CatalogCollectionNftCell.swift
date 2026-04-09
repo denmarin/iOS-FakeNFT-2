@@ -128,7 +128,17 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
 
         if let imageURL = model.imageURL {
             nftImageView.kf.indicatorType = .activity
-            nftImageView.kf.setImage(with: imageURL)
+            let targetSize = resolvedImageTargetSize()
+            let processor = DownsamplingImageProcessor(size: targetSize)
+            nftImageView.kf.setImage(
+                with: imageURL,
+                options: [
+                    .processor(processor),
+                    .scaleFactor(UIScreen.main.scale),
+                    .cacheOriginalImage,
+                    .backgroundDecode
+                ]
+            )
         } else {
             nftImageView.image = nil
         }
@@ -239,6 +249,14 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
 
     private static func resolveIcon(image: UIImage) -> UIImage? {
         trimTransparentInsets(from: image)
+    }
+
+    private func resolvedImageTargetSize() -> CGSize {
+        let size = imageContainerView.bounds.size
+        guard size.width > 0, size.height > 0 else {
+            return CGSize(width: 240, height: 240)
+        }
+        return size
     }
 
     private static func trimTransparentInsets(from image: UIImage) -> UIImage {
