@@ -19,7 +19,7 @@ struct ProfileUpdateDto: Dto {
         [
             "name": name,
             "description": description,
-            "avatar": avatar,
+            "avatar": avatar.isEmpty ? "null" : avatar,
             "website": website,
             "likes": likes.isEmpty ? "null" : likes.joined(separator: ",")
         ]
