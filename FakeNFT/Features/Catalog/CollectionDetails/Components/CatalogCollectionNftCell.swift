@@ -50,7 +50,12 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
     private lazy var favoriteTapButton: UIButton = {
         let button = UIButton(type: .custom)
         button.backgroundColor = .clear
-        button.addTarget(self, action: #selector(didTapFavorite), for: .touchUpInside)
+        button.addAction(
+            UIAction { [weak self] _ in
+                self?.onFavoriteTap?()
+            },
+            for: .touchUpInside
+        )
         return button
     }()
 
@@ -95,7 +100,12 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
     private lazy var cartTapButton: UIButton = {
         let button = UIButton(type: .custom)
         button.backgroundColor = .clear
-        button.addTarget(self, action: #selector(didTapCart), for: .touchUpInside)
+        button.addAction(
+            UIAction { [weak self] _ in
+                self?.onCartTap?()
+            },
+            for: .touchUpInside
+        )
         return button
     }()
 
@@ -142,16 +152,6 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
         } else {
             nftImageView.image = nil
         }
-    }
-
-    @objc
-    private func didTapFavorite() {
-        onFavoriteTap?()
-    }
-
-    @objc
-    private func didTapCart() {
-        onCartTap?()
     }
 
     private func configureRating(_ rawRating: Int) {

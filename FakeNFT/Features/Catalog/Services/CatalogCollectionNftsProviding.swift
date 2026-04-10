@@ -1,14 +1,15 @@
 import Foundation
 
 protocol CatalogCollectionNftsProviding {
-    func fetchNfts(
-        for collection: CatalogCollection,
-        onPartialResult: @MainActor @escaping @Sendable ([Nft]) -> Void
-    ) async throws -> [Nft]
+    func nftsStream(for collection: CatalogCollection) -> AsyncThrowingStream<[Nft], Error>
 }
 
 extension CatalogCollectionNftsProviding {
     func fetchNfts(for collection: CatalogCollection) async throws -> [Nft] {
-        try await fetchNfts(for: collection) { _ in }
+        var latest: [Nft] = []
+        for try await partialNfts in nftsStream(for: collection) {
+            latest = partialNfts
+        }
+        return latest
     }
 }

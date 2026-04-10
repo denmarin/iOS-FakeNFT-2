@@ -6,19 +6,59 @@ final class CatalogViewController: UIViewController {
         static let emptyMessage = "Коллекции пока отсутствуют"
     }
 
+    private enum Section {
+        case main
+    }
+
+    private typealias DataSource = UITableViewDiffableDataSource<Section, String>
+    private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, String>
+
     private let viewModel: CatalogViewModel
+
     lazy var activityIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .large)
         indicator.hidesWhenStopped = true
         return indicator
     }()
 
-    private var cellModels: [CatalogCollectionCellViewModel] = []
+    private var dataSource: DataSource?
+    private var cellModelsByID: [String: CatalogCollectionCellViewModel] = [:]
+    private var orderedCollectionIDs: [String] = []
+
+    private lazy var refreshControl: UIRefreshControl = {
+        let control = UIRefreshControl()
+        control.addAction(
+            UIAction { [weak self] _ in
+                self?.viewModel.refreshCollections()
+            },
+            for: .valueChanged
+        )
+        return control
+    }()
+
+    private let emptyFooterView = UIView(frame: .zero)
+
+    private lazy var paginationIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
+
+    private lazy var paginationFooterView: UIView = {
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 52))
+        container.backgroundColor = .clear
+        container.addSubview(paginationIndicator)
+        paginationIndicator.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            paginationIndicator.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            paginationIndicator.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+        ])
+        return container
+    }()
 
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.register(CatalogCollectionCell.self)
-        tableView.dataSource = self
         tableView.delegate = self
         tableView.separatorStyle = .none
         tableView.rowHeight = UITableView.automaticDimension
@@ -26,6 +66,8 @@ final class CatalogViewController: UIViewController {
         tableView.backgroundColor = .clear
         tableView.sectionHeaderTopPadding = 0
         tableView.contentInset = UIEdgeInsets(top: 10, left: 0, bottom: 16, right: 0)
+        tableView.refreshControl = refreshControl
+        tableView.tableFooterView = emptyFooterView
         return tableView
     }()
 
@@ -42,7 +84,12 @@ final class CatalogViewController: UIViewController {
         let button = UIButton(type: .system)
         button.setTitle(NSLocalizedString("Error.repeat", comment: ""), for: .normal)
         button.titleLabel?.font = .bodyBold
-        button.addTarget(self, action: #selector(didTapRetry), for: .touchUpInside)
+        button.addAction(
+            UIAction { [weak self] _ in
+                self?.viewModel.retryLoading()
+            },
+            for: .touchUpInside
+        )
         return button
     }()
 
@@ -69,18 +116,9 @@ final class CatalogViewController: UIViewController {
         super.viewDidLoad()
         navigationItem.largeTitleDisplayMode = .never
         setupLayout()
+        setupDataSource()
         bindViewModel()
         viewModel.viewDidLoad()
-    }
-
-    @objc
-    private func didTapSort() {
-        viewModel.didTapSort()
-    }
-
-    @objc
-    private func didTapRetry() {
-        viewModel.retryLoading()
     }
 
     private func setupLayout() {
@@ -88,10 +126,12 @@ final class CatalogViewController: UIViewController {
         navigationItem.title = nil
 
         let sortItem = UIBarButtonItem(
+            title: nil,
             image: UIImage(resource: .sort),
-            style: .plain,
-            target: self,
-            action: #selector(didTapSort)
+            primaryAction: UIAction { [weak self] _ in
+                self?.viewModel.didTapSort()
+            },
+            menu: nil
         )
         sortItem.tintColor = CatalogColors.textPrimary
         navigationItem.rightBarButtonItem = sortItem
@@ -122,8 +162,22 @@ final class CatalogViewController: UIViewController {
         viewModel.onStateChange = { [weak self] state in
             self?.render(state)
         }
+        viewModel.onPaginationLoadingChange = { [weak self] isLoading in
+            self?.setPaginationLoading(isLoading)
+        }
         viewModel.onPresentSortOptions = { [weak self] options in
             self?.showSortOptions(options: options)
+        }
+    }
+
+    private func setupDataSource() {
+        dataSource = DataSource(tableView: tableView) { [weak self] tableView, _, itemIdentifier in
+            guard let self, let model = self.cellModelsByID[itemIdentifier] else {
+                return UITableViewCell()
+            }
+            let cell: CatalogCollectionCell = tableView.dequeueReusableCell()
+            cell.configure(with: model)
+            return cell
         }
     }
 
@@ -132,6 +186,8 @@ final class CatalogViewController: UIViewController {
         case .loading:
             setSortEnabled(false)
             hideState()
+            endRefreshingIfNeeded()
+            setPaginationLoading(false)
             tableView.isHidden = true
             showLoading()
 
@@ -140,18 +196,24 @@ final class CatalogViewController: UIViewController {
             hideLoading()
             hideState()
             tableView.isHidden = false
-            cellModels = models
-            tableView.reloadData()
+            applyContent(models)
+            endRefreshingIfNeeded()
 
         case .empty:
             setSortEnabled(false)
             hideLoading()
+            endRefreshingIfNeeded()
+            setPaginationLoading(false)
+            applyContent([])
             tableView.isHidden = true
             showState(message: Constants.emptyMessage, showsRetry: false)
 
         case .error(let message):
             setSortEnabled(false)
             hideLoading()
+            endRefreshingIfNeeded()
+            setPaginationLoading(false)
+            applyContent([])
             tableView.isHidden = true
             showState(message: message, showsRetry: true)
         }
@@ -161,6 +223,43 @@ final class CatalogViewController: UIViewController {
         stateMessageLabel.text = message
         retryButton.isHidden = !showsRetry
         stateStackView.isHidden = false
+    }
+
+    private func applyContent(_ models: [CatalogCollectionCellViewModel]) {
+        let previousIDs = orderedCollectionIDs
+
+        var uniqueModelsByID: [String: CatalogCollectionCellViewModel] = [:]
+        var uniqueIDs: [String] = []
+        uniqueIDs.reserveCapacity(models.count)
+
+        for model in models where uniqueModelsByID[model.id] == nil {
+            uniqueModelsByID[model.id] = model
+            uniqueIDs.append(model.id)
+        }
+
+        cellModelsByID = uniqueModelsByID
+        orderedCollectionIDs = uniqueIDs
+
+        var snapshot = Snapshot()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(uniqueIDs, toSection: .main)
+        dataSource?.apply(snapshot, animatingDifferences: !previousIDs.isEmpty)
+    }
+
+    private func setPaginationLoading(_ isLoading: Bool) {
+        if isLoading {
+            tableView.tableFooterView = paginationFooterView
+            paginationIndicator.startAnimating()
+            return
+        }
+
+        paginationIndicator.stopAnimating()
+        tableView.tableFooterView = emptyFooterView
+    }
+
+    private func endRefreshingIfNeeded() {
+        guard refreshControl.isRefreshing else { return }
+        refreshControl.endRefreshing()
     }
 
     private func hideState() {
@@ -203,23 +302,14 @@ final class CatalogViewController: UIViewController {
     }
 }
 
-extension CatalogViewController: UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        cellModels.count
-    }
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell: CatalogCollectionCell = tableView.dequeueReusableCell()
-        let model = cellModels[indexPath.row]
-        cell.configure(with: model)
-        return cell
-    }
-}
-
 extension CatalogViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         viewModel.didSelectCollection(at: indexPath.row)
+    }
+
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        viewModel.didDisplayCollection(at: indexPath.row)
     }
 
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {

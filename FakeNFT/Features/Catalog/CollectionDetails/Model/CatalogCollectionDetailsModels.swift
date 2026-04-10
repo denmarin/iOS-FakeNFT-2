@@ -17,7 +17,7 @@ struct CatalogCollectionNftCellViewModel: Sendable, Equatable {
     let isInCart: Bool
 }
 
-enum CatalogCollectionDetailsViewState {
+enum CatalogCollectionDetailsViewState: Sendable {
     case loading
     case content([CatalogCollectionNftCellViewModel])
     case failed(message: String)

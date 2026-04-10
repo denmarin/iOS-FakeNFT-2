@@ -24,6 +24,18 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         static let prefetchSkipCount = 9
     }
 
+    private enum Section {
+        case main
+    }
+
+    private struct ItemIdentifier: Hashable {
+        let nftID: String
+        let occurrence: Int
+    }
+
+    private typealias DataSource = UICollectionViewDiffableDataSource<Section, ItemIdentifier>
+    private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, ItemIdentifier>
+
     private enum Icons {
         static let back = "chevron.left"
     }
@@ -49,7 +61,12 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         button.setImage(UIImage(systemName: Icons.back, withConfiguration: symbolConfiguration), for: .normal)
         button.tintColor = .black
         button.backgroundColor = .clear
-        button.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
+        button.addAction(
+            UIAction { [weak self] _ in
+                self?.navigateBack()
+            },
+            for: .touchUpInside
+        )
         return button
     }()
 
@@ -133,7 +150,6 @@ final class CatalogCollectionDetailsViewController: UIViewController {
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.register(CatalogCollectionNftCell.self)
-        collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.allowsSelection = false
         collectionView.backgroundColor = .clear
@@ -142,7 +158,9 @@ final class CatalogCollectionDetailsViewController: UIViewController {
     }()
 
     private var collectionHeightConstraint: NSLayoutConstraint?
-    private var cellModels: [CatalogCollectionNftCellViewModel] = []
+    private var dataSource: DataSource?
+    private var cellModelsByItemID: [ItemIdentifier: CatalogCollectionNftCellViewModel] = [:]
+    private var orderedItemIDs: [ItemIdentifier] = []
     private var prefetchedImageURLs: Set<URL> = []
     private var imagePrefetchers: [UUID: ImagePrefetcher] = [:]
 
@@ -163,6 +181,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         buildLayout()
+        setupDataSource()
         bindViewModel()
         applyHeader(viewModel.headerViewModel)
         viewModel.viewDidLoad()
@@ -291,6 +310,23 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         }
     }
 
+    private func setupDataSource() {
+        dataSource = DataSource(collectionView: collectionView) { [weak self] collectionView, indexPath, itemID in
+            guard let self, let model = self.cellModelsByItemID[itemID] else {
+                return UICollectionViewCell()
+            }
+            let cell: CatalogCollectionNftCell = collectionView.dequeueReusableCell(indexPath: indexPath)
+            cell.configure(with: model)
+            cell.onFavoriteTap = { [weak self] in
+                self?.viewModel.didTapFavorite(for: model.id)
+            }
+            cell.onCartTap = { [weak self] in
+                self?.viewModel.didTapCart(for: model.id)
+            }
+            return cell
+        }
+    }
+
     private func applyHeader(_ header: CatalogCollectionDetailsHeaderViewModel) {
         titleLabel.text = header.title
         descriptionLabel.text = header.description
@@ -354,34 +390,44 @@ final class CatalogCollectionDetailsViewController: UIViewController {
     }
 
     private func applyContent(_ models: [CatalogCollectionNftCellViewModel]) {
-        let previousModels = cellModels
-        cellModels = models
+        let previousModelsByItemID = cellModelsByItemID
+        let previousItemIDs = orderedItemIDs
 
-        guard !previousModels.isEmpty else {
-            collectionView.reloadData()
-            updateCollectionHeightIfNeeded()
-            prefetchImages(for: models)
-            return
+        var occurrenceByNftID: [String: Int] = [:]
+        var modelsByItemID: [ItemIdentifier: CatalogCollectionNftCellViewModel] = [:]
+        var itemIDs: [ItemIdentifier] = []
+        itemIDs.reserveCapacity(models.count)
+
+        for model in models {
+            let occurrence = occurrenceByNftID[model.id, default: 0]
+            occurrenceByNftID[model.id] = occurrence + 1
+
+            let itemID = ItemIdentifier(nftID: model.id, occurrence: occurrence)
+            modelsByItemID[itemID] = model
+            itemIDs.append(itemID)
         }
 
-        if let insertedIndexes = insertedIndexes(from: previousModels, to: models), !insertedIndexes.isEmpty {
-            let indexPaths = insertedIndexes.map { IndexPath(item: $0, section: 0) }
-            collectionView.performBatchUpdates {
-                collectionView.insertItems(at: indexPaths)
+        cellModelsByItemID = modelsByItemID
+        orderedItemIDs = itemIDs
+
+        let changedItemIDs = itemIDs.filter { itemID in
+            guard let previous = previousModelsByItemID[itemID], let current = modelsByItemID[itemID] else {
+                return false
             }
-        } else if let changedIndexes = changedIndexes(from: previousModels, to: models), !changedIndexes.isEmpty {
-            let indexPaths = changedIndexes.map { IndexPath(item: $0, section: 0) }
-            collectionView.performBatchUpdates {
-                collectionView.reloadItems(at: indexPaths)
-            }
-        } else if previousModels == models {
-            // No-op update from state sync, keep current layout and cells as is.
-        } else {
-            collectionView.reloadData()
+            return previous != current
         }
 
-        updateCollectionHeightIfNeeded()
-        prefetchImages(for: models)
+        var snapshot = Snapshot()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(itemIDs, toSection: .main)
+        if !changedItemIDs.isEmpty {
+            snapshot.reloadItems(changedItemIDs)
+        }
+        dataSource?.apply(snapshot, animatingDifferences: !previousItemIDs.isEmpty) { [weak self] in
+            guard let self else { return }
+            self.updateCollectionHeightIfNeeded()
+            self.prefetchImages(for: models)
+        }
     }
 
     private func prefetchImages(for models: [CatalogCollectionNftCellViewModel]) {
@@ -400,42 +446,12 @@ final class CatalogCollectionDetailsViewController: UIViewController {
                 .backgroundDecode
             ]
         ) { [weak self] _, _, _ in
-            DispatchQueue.main.async {
+            Task { @MainActor [weak self] in
                 self?.imagePrefetchers.removeValue(forKey: prefetcherID)
             }
         }
         imagePrefetchers[prefetcherID] = prefetcher
         prefetcher.start()
-    }
-
-    private func insertedIndexes(
-        from previous: [CatalogCollectionNftCellViewModel],
-        to current: [CatalogCollectionNftCellViewModel]
-    ) -> [Int]? {
-        guard current.count > previous.count else { return nil }
-
-        var prefixCount = 0
-        while prefixCount < previous.count,
-              previous[prefixCount] == current[prefixCount] {
-            prefixCount += 1
-        }
-
-        var suffixCount = 0
-        while suffixCount < previous.count - prefixCount,
-              previous[previous.count - 1 - suffixCount] == current[current.count - 1 - suffixCount] {
-            suffixCount += 1
-        }
-
-        guard prefixCount + suffixCount == previous.count else { return nil }
-        return Array(prefixCount..<(current.count - suffixCount))
-    }
-
-    private func changedIndexes(
-        from previous: [CatalogCollectionNftCellViewModel],
-        to current: [CatalogCollectionNftCellViewModel]
-    ) -> [Int]? {
-        guard previous.count == current.count else { return nil }
-        return previous.indices.filter { previous[$0] != current[$0] }
     }
 
     private func updateCollectionHeightIfNeeded() {
@@ -469,30 +485,8 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         return size
     }
 
-    @objc
-    private func didTapBack() {
+    private func navigateBack() {
         navigationController?.popViewController(animated: true)
-    }
-}
-
-extension CatalogCollectionDetailsViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        cellModels.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell: CatalogCollectionNftCell = collectionView.dequeueReusableCell(indexPath: indexPath)
-        let model = cellModels[indexPath.row]
-        let nftID = model.id
-
-        cell.configure(with: model)
-        cell.onFavoriteTap = { [weak self] in
-            self?.viewModel.didTapFavorite(for: nftID)
-        }
-        cell.onCartTap = { [weak self] in
-            self?.viewModel.didTapCart(for: nftID)
-        }
-        return cell
     }
 }
 

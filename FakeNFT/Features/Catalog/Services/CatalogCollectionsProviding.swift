@@ -1,13 +1,27 @@
 import Foundation
 
-protocol CatalogCollectionsProviding {
-    func fetchCollections(
-        onPartialResult: @MainActor @escaping @Sendable ([CatalogCollection]) -> Void
-    ) async throws -> [CatalogCollection]
+enum CatalogCollectionsSort: Sendable, Equatable {
+    case byNameAscending
+    case byNftCountDescending
+
+    var queryValue: String {
+        switch self {
+        case .byNameAscending:
+            "name,asc"
+        case .byNftCountDescending:
+            "nfts,desc"
+        }
+    }
 }
 
-extension CatalogCollectionsProviding {
-    func fetchCollections() async throws -> [CatalogCollection] {
-        try await fetchCollections { _ in }
-    }
+struct CatalogCollectionsPage: Sendable, Equatable {
+    let collections: [CatalogCollection]
+    let hasNextPage: Bool
+}
+
+protocol CatalogCollectionsProviding {
+    func fetchCollectionsPage(
+        page: Int,
+        sortBy: CatalogCollectionsSort?
+    ) async throws -> CatalogCollectionsPage
 }

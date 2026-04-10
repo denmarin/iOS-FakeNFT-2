@@ -84,14 +84,10 @@ final class CatalogCollectionDetailsViewModel {
         loadingTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let fetchedNfts = try await nftsProvider.fetchNfts(
-                    for: collection
-                ) { [weak self] partialNfts in
-                    guard let self else { return }
-                    self.applyNfts(partialNfts)
+                for try await partialNfts in nftsProvider.nftsStream(for: collection) {
+                    guard !Task.isCancelled else { return }
+                    applyNfts(partialNfts)
                 }
-                guard !Task.isCancelled else { return }
-                applyNfts(fetchedNfts)
             } catch is CancellationError {
                 return
             } catch {

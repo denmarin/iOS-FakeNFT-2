@@ -15,12 +15,34 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
         self.cache = cache
     }
 
-    func fetchNfts(
+    func nftsStream(for collection: CatalogCollection) -> AsyncThrowingStream<[Nft], Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    try await streamNfts(for: collection, continuation: continuation)
+                    continuation.finish()
+                } catch is CancellationError {
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
+        }
+    }
+
+    private func streamNfts(
         for collection: CatalogCollection,
-        onPartialResult: @MainActor @escaping @Sendable ([Nft]) -> Void
-    ) async throws -> [Nft] {
+        continuation: AsyncThrowingStream<[Nft], Error>.Continuation
+    ) async throws {
         let ids = collection.nftIDs
-        guard !ids.isEmpty else { return [] }
+        guard !ids.isEmpty else {
+            continuation.yield([])
+            return
+        }
 
         let prepared = prepareIDs(ids)
         var orderedNfts = Array<Nft?>(repeating: nil, count: ids.count)
@@ -39,12 +61,16 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
         let cachedNfts = orderedNfts.compactMap { $0 }
         if !cachedNfts.isEmpty {
             lastPublishedCount = cachedNfts.count
-            await onPartialResult(cachedNfts)
+            continuation.yield(cachedNfts)
         }
 
         let pendingIDs = prepared.uniqueIDs.filter { cachedByID[$0] == nil }
         guard !pendingIDs.isEmpty else {
-            return orderedNfts.compactMap { $0 }
+            let allNfts = orderedNfts.compactMap { $0 }
+            if allNfts.count != lastPublishedCount {
+                continuation.yield(allNfts)
+            }
+            return
         }
 
         let loader = self.loader
@@ -70,7 +96,7 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
                 let partialNfts = orderedNfts.compactMap { $0 }
                 if partialNfts.count != lastPublishedCount {
                     lastPublishedCount = partialNfts.count
-                    await onPartialResult(partialNfts)
+                    continuation.yield(partialNfts)
                 }
 
                 if nextPendingIndex < pendingIDs.count {
@@ -81,7 +107,10 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
             }
         }
 
-        return orderedNfts.compactMap { $0 }
+        let allNfts = orderedNfts.compactMap { $0 }
+        if allNfts.count != lastPublishedCount {
+            continuation.yield(allNfts)
+        }
     }
 
     private func prepareIDs(_ ids: [String]) -> (uniqueIDs: [String], positionsByID: [String: [Int]]) {
