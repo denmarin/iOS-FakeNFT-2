@@ -3,7 +3,7 @@ import Kingfisher
 
 final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
     let activityIndicator = UIActivityIndicatorView(style: .large)
-
+    
     
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -156,7 +156,7 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
                 }
             }
         }
-
+        
     }
     
     private func initWithViewModel(){

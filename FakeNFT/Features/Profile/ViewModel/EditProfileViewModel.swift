@@ -60,17 +60,16 @@ final class EditProfileViewModel{
                     avatar: avatar?.absoluteString ?? "",
                     likes: currentLikes
                 )
+                
+                if Task.isCancelled { return }
                 state = .idle
-    
+                
                 onSave(updatedData.header)
                 
             } catch let error as NetworkClientError {
                 state = .error(error.description)
-                state = .idle
-                
             } catch {
                 state = .error("Произошла непредвиденная ошибка")
-                state = .idle
             }
             
         }

@@ -11,7 +11,7 @@ protocol ErrorView {
 }
 
 extension ErrorView where Self: UIViewController {
-
+    
     func showError(_ model: ErrorModel) {
         let title = NSLocalizedString("Error.title", comment: "")
         let alert = UIAlertController(
@@ -22,6 +22,10 @@ extension ErrorView where Self: UIViewController {
         let action = UIAlertAction(title: model.actionText, style: UIAlertAction.Style.default) {_ in
             model.action()
         }
+        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel){[weak self] _ in
+            self?.dismiss(animated: true)
+        }
+        alert.addAction(cancelAction)
         alert.addAction(action)
         present(alert, animated: true)
     }

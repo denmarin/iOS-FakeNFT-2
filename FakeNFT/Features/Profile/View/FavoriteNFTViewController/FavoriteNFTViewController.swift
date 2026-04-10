@@ -1,4 +1,5 @@
 import UIKit
+import Kingfisher
 
 final class FavoriteNFTViewController: UIViewController, LoadingView, ErrorView{
     let activityIndicator = UIActivityIndicatorView(style: .large)
@@ -45,6 +46,9 @@ final class FavoriteNFTViewController: UIViewController, LoadingView, ErrorView{
         setupBindings()
         setupNavigationBar()
         setupUI()
+        Task { [weak self] in
+            await self?.viewModel.loadData()
+        }
     }
     
     private func setupBindings() {
@@ -79,7 +83,9 @@ final class FavoriteNFTViewController: UIViewController, LoadingView, ErrorView{
                 message: message,
                 actionText: "Повторить"
             ) { [weak self] in
-                self?.viewModel.loadData()
+                Task{
+                    await self?.viewModel.loadData()
+                }
             }
             
             showError(errorModel)
@@ -169,11 +175,14 @@ extension FavoriteNFTViewController: UICollectionViewDataSource{
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: FavoriteNFTCollectionViewCell = collectionView.dequeueReusableCell(indexPath: indexPath)
-      //  cell.config(imageName: nftArr[indexPath.row].imageAssetName, nftTitle: nftArr[indexPath.row].title, rating: nftArr[indexPath.row].rating, price: nftArr[indexPath.row].priceText)
+        
+        let nft = nftArr[indexPath.row]
+        
+        cell.config(image: nft.image, nftTitle: nft.title, rating: nft.rating, price: nft.price)
         
         cell.onLikeTapped = { [weak self] in
             guard let self else { return }
-            self.viewModel.didTapLikeButton(nftId: self.nftArr[indexPath.row].id)
+            self.viewModel.didTapLikeButton(nftId: nft.id)
         }
         return cell
     }

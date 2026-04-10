@@ -12,5 +12,5 @@ protocol ProfileViewModel {
     func didTapEdit()
     func didTapWebsite()
     func updateHeader(_ newHeader: ProfileHeader)
-    func updateFavorite(_ newFavorites: [NftCard])
+    func updateFavorite(_ newFavorites: [NftCard],_ newFavoritesIds: [String])
 }

@@ -10,7 +10,7 @@ struct ProfileHeader: Equatable {
 struct NftCard: Equatable, Identifiable {
     let id: String
     let title: String
-    let priceText: Double
+    let price: Double
     let rating: Int
     let image: URL?
     let authorName: String

@@ -20,7 +20,7 @@ final class ProfileViewModelImpl: ProfileViewModel {
         if screenData == nil {
             stateSubject.send(.loading)
         }
-
+        
         Task {
             do {
                 let data = try await provider.loadProfile()
@@ -37,12 +37,12 @@ final class ProfileViewModelImpl: ProfileViewModel {
     
     func didTapMyNfts() {
         guard let data = screenData else { return }
-        routeSubject.send(.myNfts(data.myNfts))
+        routeSubject.send(.myNfts(data))
     }
     
     func didTapFavorites() {
         guard let data = screenData else { return }
-        routeSubject.send(.favorites(data.favorites))
+        routeSubject.send(.favorites(data))
     }
     
     func didTapEdit() {
@@ -69,16 +69,18 @@ final class ProfileViewModelImpl: ProfileViewModel {
         self.stateSubject.send(.content(updatedData))
     }
     
-    func updateFavorite(_ newFavorites: [NftCard]){
-//        guard let currentData = screenData else { return }
-//        
-//        let updatedData = ProfileScreenData(
-//            header: currentData.header,
-//            myNfts: currentData.myNfts,
-//            favorites: newFavorites
-//        )
-//        
-//        self.screenData = updatedData
-//        self.stateSubject.send(.content(updatedData))
+    func updateFavorite(_ newFavorites: [NftCard],_ newFavoritesIds: [String]){
+        guard let currentData = screenData else { return }
+        
+        let updatedData = ProfileScreenData(
+            header: currentData.header,
+            myNftsIds: currentData.myNftsIds,
+            favoritesIds: newFavoritesIds,
+            myNfts: currentData.myNfts,
+            favorites: newFavorites
+        )
+        
+        self.screenData = updatedData
+        self.stateSubject.send(.content(updatedData))
     }
 }

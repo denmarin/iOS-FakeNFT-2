@@ -41,6 +41,9 @@ final class MyNFTViewController: UIViewController, LoadingView, ErrorView{
         setupNavigationBar()
         setupUI()
         setupBindings()
+        Task { [weak self] in
+            await self?.viewModel.loadData()
+        }
     }
     
     private func setupBindings() {
@@ -75,7 +78,9 @@ final class MyNFTViewController: UIViewController, LoadingView, ErrorView{
                 message: message,
                 actionText: "Повторить"
             ) { [weak self] in
-                self?.viewModel.loadData()
+                Task{
+                    await self?.viewModel.loadData()
+                }
             }
             
             showError(errorModel)
@@ -160,7 +165,9 @@ extension MyNFTViewController: UITableViewDelegate, UITableViewDataSource{
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: MyNFTTableViewCell = tableView.dequeueReusableCell(indexPath: indexPath)
-      //  cell.config(nftImageName: nftArr[indexPath.row].imageAssetName, nftTitle: nftArr[indexPath.row].title, rating: nftArr[indexPath.row].rating, author: nftArr[indexPath.row].authorName, price: nftArr[indexPath.row].priceText)
+        let nft = nftArr[indexPath.row]
+        cell.selectionStyle = .none
+        cell.config(nftImage: nft.image, nftTitle: nft.title, rating: nft.rating, author: nft.authorName, price: nft.price)
         return cell
     }
     

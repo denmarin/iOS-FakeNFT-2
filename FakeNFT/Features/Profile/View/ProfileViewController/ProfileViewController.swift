@@ -241,15 +241,17 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
             
             present(navVC, animated: true)
             
-        case .myNfts(let nfts):
-            let myNftViewModel = MyNFTViewModel(nfts: nfts)
+        case .myNfts(let profileScreenData):
+            let service = ProfileServiceImp()
+            let myNftViewModel = MyNFTViewModel(nfts: profileScreenData.myNfts, nftsIds: profileScreenData.myNftsIds, provider: service)
             let vc = MyNFTViewController(viewModel: myNftViewModel)
             let navvc = UINavigationController(rootViewController: vc)
             navvc.modalPresentationStyle = .fullScreen
             present(navvc,animated: true)
-        case .favorites(let nfts):
-            let favoriteNftViewModel = FavoriteNFTViewModel(nfts: nfts){[weak self] newFavorites in
-                self?.viewModel.updateFavorite(newFavorites)
+        case .favorites(let profileScreenData):
+            let service = ProfileServiceImp()
+            let favoriteNftViewModel = FavoriteNFTViewModel(nftsIds: profileScreenData.favoritesIds, nftCards: profileScreenData.favorites,dataProvider: service, header: profileScreenData.header){[weak self] newFavorites, newFavoritesIds in
+                self?.viewModel.updateFavorite(newFavorites,newFavoritesIds)
             }
             let vc = FavoriteNFTViewController(viewModel: favoriteNftViewModel)
             let navvc = UINavigationController(rootViewController: vc)

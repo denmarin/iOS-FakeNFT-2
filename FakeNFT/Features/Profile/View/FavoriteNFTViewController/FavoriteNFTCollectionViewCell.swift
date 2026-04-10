@@ -60,6 +60,23 @@ final class FavoriteNFTCollectionViewCell: UICollectionViewCell, ReuseIdentifyin
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        NFTImageView.kf.cancelDownloadTask()
+        NFTImageView.image = nil
+        
+        titleLabel.text = nil
+        priceValueLabel.text = nil
+        
+        onLikeTapped = nil
+        
+        starStack.arrangedSubviews.forEach {
+            starStack.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+    }
+    
     private func setupUI(){
         let nftView = UIView()
         nftView.translatesAutoresizingMaskIntoConstraints = false
@@ -120,11 +137,21 @@ final class FavoriteNFTCollectionViewCell: UICollectionViewCell, ReuseIdentifyin
         }
     }
     
-    func config(imageName: String, nftTitle: String, rating: Int, price: String){
-        NFTImageView.image = UIImage(named: imageName)
+    func config(image: URL?, nftTitle: String, rating: Int, price: Double){
+        NFTImageView.kf.cancelDownloadTask()
+        NFTImageView.image = nil
+        if let url = image{
+            NFTImageView.kf.setImage(
+                with: url,
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2))
+                ]
+            )
+        }
         titleLabel.text = nftTitle
         updateStarStack(rating: rating)
-        priceValueLabel.text = price
+        priceValueLabel.text = "\(price) ETH"
     }
     
     @objc private func likeButtonDidTap(){
