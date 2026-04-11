@@ -38,21 +38,7 @@ final class CartViewModel {
         Task {
             do {
                 let fetchedNfts = try await service.loadCart()
-                //                self.items = fetchedNfts
-                // ВРЕМЕННО: Если сервер пуст, добавляем мок
-                if fetchedNfts.isEmpty {
-                    let mockNft = Nft(
-                        id: "1",
-                        images: [URL(string: "https://code.s3.yandex.net/Mobile/iOS/NFT/Blue/Bonnie/1.png")!],
-                        name: "April",
-                        price: 1.78,
-                        rating: 3,
-                        author: "1",
-                        description: "",
-                        website: URL(string: "https://yandex.ru")!
-                    )
-                    self.items = [mockNft] } else { self.items = fetchedNfts }
-                
+                self.items = fetchedNfts
                 self.applySort()
                 self.isLoading = false
             } catch {
