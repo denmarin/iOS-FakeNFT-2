@@ -6,7 +6,6 @@
 //
 import Foundation
 
-// Эта модель описывает ТОЛЬКО ответ от GET /api/v1/users
 struct UserListResponse: Decodable {
     let id: String
     let name: String
@@ -14,13 +13,9 @@ struct UserListResponse: Decodable {
     let description: String?
     let website: String?
     let nfts: [String]?
-    
-    // Сервер присылает рейтинг СТРОКОЙ ("1", "10")
-    let rating: String?
-    
-    // Поля 'likes' в этом ответе нет, поэтому мы его просто не объявляем здесь.
-    
-    // Метод конвертации в нашу общую модель Profile
+
+    let rating: String
+ 
     func toProfile() -> Profile {
         return Profile(
             id: self.id,
@@ -29,7 +24,7 @@ struct UserListResponse: Decodable {
             description: self.description,
             website: URL(string: self.website ?? ""),
             nfts: self.nfts ?? [],
-            likes: [] // Лайков в списке нет, передаем пустой массив
+            likes: []
         )
     }
 }

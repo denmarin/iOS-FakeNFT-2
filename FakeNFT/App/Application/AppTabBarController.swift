@@ -21,8 +21,10 @@ final class AppTabBarController: UITabBarController {
     private func setupTabs() {
         let catalogController = TestCatalogViewController(servicesAssembly: servicesAssembly)
         
-        let statisticsViewModel = StatisticsViewModel()
-
+        let networkClient = DefaultNetworkClient()
+        let statsService = StatisticsService(networkClient: networkClient)
+        let statisticsViewModel = StatisticsViewModel(service: statsService)
+        
         let cartController = UIViewController()
         let profileController = UIViewController()
         let statsController = StatisticsViewController(viewModel: statisticsViewModel)

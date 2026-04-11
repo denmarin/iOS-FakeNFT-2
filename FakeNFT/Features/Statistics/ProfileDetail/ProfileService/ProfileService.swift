@@ -20,10 +20,15 @@ final class ProfileService: ProfileServiceProtocol {
     }
     
     func loadProfile(id: String) async throws -> Profile {
-        let request = ProfileRequest(userID: id)
+        let request: NetworkRequest
         
-        return try await networkClient.send(request: request, type: Profile.self)
+        if id == RequestConstants.token {
+            request = GetMyProfileRequest()
+        } else {
+            request = ProfileRequest(userID: id)
+        }
+        
+        let response: ProfileResponse = try await networkClient.send(request: request, type: ProfileResponse.self)
+        return response.toProfile()
     }
-    
-    
 }

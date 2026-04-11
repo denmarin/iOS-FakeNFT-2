@@ -54,7 +54,17 @@ final class StatisticsViewController: UIViewController {
             label.isHidden = true
             label.translatesAutoresizingMaskIntoConstraints = false
             return label
-        }()
+    }()
+    private lazy var sortButton: UIButton = {
+        let sortButton = UIButton()
+        sortButton.setImage(.sort, for: .normal)
+        sortButton.tintColor = .ypBlack
+        sortButton.addTarget(self, action: #selector(sortButtonTapped), for: .touchUpInside)
+        sortButton.translatesAutoresizingMaskIntoConstraints = false
+        sortButton.widthAnchor.constraint(equalToConstant: 42).isActive = true
+        sortButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
+        return sortButton
+    }()
 
     init(viewModel: StatisticsViewModel) {
         self.viewModel = viewModel
@@ -108,18 +118,24 @@ final class StatisticsViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        let sortButton = UIButton()
-        sortButton.setImage(.sort, for: .normal)
-        sortButton.tintColor = .ypBlack
-        sortButton.addTarget(self, action: #selector(sortButtonTapped), for: .touchUpInside)
-        sortButton.translatesAutoresizingMaskIntoConstraints = false
-        sortButton.widthAnchor.constraint(equalToConstant: 42).isActive = true
-        sortButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
-        
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: sortButton)
     }
     
     @objc private func sortButtonTapped() {
+        let alert = UIAlertController()
+        
+        let byRating = UIAlertAction(title: "По рейтингу", style: .default) { [weak self] _ in
+            self?.viewModel.sortUsers(by: .byRating)
+        }
+  
+        let byName = UIAlertAction(title: "По имени", style: .default) { [weak self] _ in
+            self?.viewModel.sortUsers(by: .byName)
+        }
+        
+        alert.addAction(byRating)
+        alert.addAction(byName)
+
+        present(alert, animated: true)
         
     }
 
@@ -140,6 +156,7 @@ final class StatisticsViewController: UIViewController {
     }
     
     private func updateUI(for state: State) {
+        print("🔄 UI State: \(state)")
         switch state {
         case .loading:
             loadingIndicator.startAnimating()
@@ -185,7 +202,7 @@ extension StatisticsViewController: UITableViewDataSource {
         
         let user = viewModel.users[indexPath.row]
         
-        cell.configure(with: user, rank: indexPath.row + 1)
+        cell.configure(with: user)
         
         return cell
     }
@@ -199,32 +216,12 @@ extension StatisticsViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let user = viewModel.users[indexPath.row]
         
-//        let profile = Profile(
-//            id: user.id,
-//            name: user.name,
-//            avatar: user.avatarUrl,
-//            description: nil,
-//            website: nil,
-//            nftIDs: [],
-//            likedNftIDs: []
-//        )
+        let profile = viewModel.users[indexPath.row]
         
-        // В StatisticsViewController, в didSelectRowAt
-        let profile = Profile(
-            id: user.id,
-            name: user.name,
-            avatar: user.avatarUrl,
-            description: "Тестовое описание пользователя",
-            website: URL(string: "https://example.com"),
-            nftIDs: ["1", "2", "3", "4", "5"],  // ← добавим тестовые ID
-            likedNftIDs: []
-        )
+        let detailViewModel = ProfileDetailViewModel(profile: profile.toProfile(), currentUserId: RequestConstants.token)
         
-        let detailViewModel = ProfileDetailViewModel(profile: profile)
-        
-        let nftService = MockStatisticsNftService()
+        let nftService =  StatisticsService(networkClient: DefaultNetworkClient())
         
         let detailViewController = ProfileDetailViewController(
             viewModel: detailViewModel,

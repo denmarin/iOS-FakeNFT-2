@@ -10,9 +10,8 @@ import WebKit
 
 final class WebViewController: UIViewController {
     
-    private let url: URL
+    private let viewModel: WebViewModelProtocol
     
-    // WebView для отображения контента
     private lazy var webView: WKWebView = {
         let webConfiguration = WKWebViewConfiguration()
         let webView = WKWebView(frame: .zero, configuration: webConfiguration)
@@ -20,18 +19,8 @@ final class WebViewController: UIViewController {
         return webView
     }()
     
-    // Кнопка закрытия/назад
-    private lazy var closeButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "xmark"), for: .normal)
-        button.tintColor = .ypBlack
-        button.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
-    init(url: URL) {
-        self.url = url
+    init(viewModel: WebViewModelProtocol) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -42,37 +31,50 @@ final class WebViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupConstraints()
         loadWebsite()
+        bindViewModel()
     }
     
     private func setupUI() {
         view.backgroundColor = .white
-        
         view.addSubview(webView)
-        view.addSubview(closeButton)
-        setupNavigationBar()
         
+        let backButton = UIBarButtonItem(
+            image: UIImage(
+                systemName: "chevron.left")?
+                .withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+                .withTintColor(.black, renderingMode: .alwaysOriginal
+                              ),
+            style: .plain,
+            target: self,
+            action: #selector(backTapped)
+        )
+        backButton.tintColor = .ypBlack
+        navigationItem.leftBarButtonItem = backButton
     }
     
-    private func setupNavigationBar() {
-        navigationController?.navigationBar.tintColor = .ypBlack
-        
-        let backImage = UIImage(systemName: "chevron.left")?
-            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
-            .withTintColor(.black, renderingMode: .alwaysOriginal)
-
-        navigationController?.navigationBar.backIndicatorImage = backImage
-        navigationController?.navigationBar.backIndicatorTransitionMaskImage = backImage
-
-        navigationItem.backButtonDisplayMode = .minimal
+    private func setupConstraints() {
+        NSLayoutConstraint.activate([
+            webView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+    
+    private func bindViewModel() {
+        (viewModel as? WebViewModel)?.onClose = { [weak self] in
+            self?.dismiss(animated: true, completion: nil)
+        }
     }
     
     private func loadWebsite() {
-        let request = URLRequest(url: url)
+        let request = URLRequest(url: viewModel.url)
         webView.load(request)
     }
     
-    @objc private func closeTapped() {
-        dismiss(animated: true, completion: nil)
+    @objc private func backTapped() {
+        viewModel.close()
     }
 }

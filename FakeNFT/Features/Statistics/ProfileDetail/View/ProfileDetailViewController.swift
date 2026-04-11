@@ -11,7 +11,7 @@ import Kingfisher
 final class ProfileDetailViewController: UIViewController {
 
     private let viewModel: ProfileDetailViewModelProtocol
-    private let nftService: StatisticsNftServiceProtocol
+    private let nftService: StatisticsServiceProtocol
 
     private lazy var avatarImage: UIImageView = {
         let image = UIImageView()
@@ -98,7 +98,7 @@ final class ProfileDetailViewController: UIViewController {
     }()
    
     
-    init(viewModel: ProfileDetailViewModelProtocol, nftService: StatisticsNftServiceProtocol) {
+    init(viewModel: ProfileDetailViewModelProtocol, nftService: StatisticsServiceProtocol) {
         self.viewModel = viewModel
         self.nftService = nftService
         super.init(nibName: nil, bundle: nil)
@@ -192,12 +192,8 @@ final class ProfileDetailViewController: UIViewController {
         let profile = viewModel.profile
         
         nameLabel.text = profile.name
-        nftCountLabel.text = "(\(viewModel.profile.nftIDs.count))"
-        descriptionLabel.text = """
-                    Компоненты архитектуры и ответственность между ними чётко разделены: то, что должно бытьВестущее, не называется View.
-                    Данные обрабатываются через struct или class с соблюдением принципов инкапсуляции.
-                    Классы названы правильно. Компоненты архитектуры связаны правильно.
-                    """
+        nftCountLabel.text = "(\(viewModel.profile.nfts.count))"
+        descriptionLabel.text = profile.description
         
         loadAvatar()
     }
@@ -217,23 +213,33 @@ final class ProfileDetailViewController: UIViewController {
     
     @objc private func websiteButtonTapped() {
         guard let website = viewModel.profile.website else { return }
+  
+        let webViewModel = WebViewModel(url: website)
+
+        let webVC = WebViewController(viewModel: webViewModel)
+ 
+        let navController = UINavigationController(rootViewController: webVC)
+
+        navController.modalPresentationStyle = .fullScreen
         
-        UIApplication.shared.open(website)
+        present(navController, animated: true, completion: nil)
     }
     
     @objc private func collectionNftTapped() {
-        let nftIDs = viewModel.profile.nftIDs
+        let networkClient = DefaultNetworkClient()
         
-        let nftService = MockStatisticsNftService()
+        let listService = NftListService(networkClient: networkClient)
+        let updateService = ProfileServiceUpdate(networkClient: networkClient)
+        let readService = ProfileService(networkClient: networkClient) 
         
         let collectionViewModel = NftCollectionViewModel(
-                nftIDs: nftIDs,
-                nftService: nftService
-            )
+            ownerProfile: viewModel.profile,
+            nftListService: listService,
+            profileUpdateService: updateService,
+            myProfileService: readService
+        )
         
-        let collectionViewController = NftCollectionViewController(viewModel: collectionViewModel)
-        
-        navigationController?.pushViewController(collectionViewController, animated: true)
-        
+        let collectionVC = NftCollectionViewController(viewModel: collectionViewModel)
+        navigationController?.pushViewController(collectionVC, animated: true)
     }
 }
