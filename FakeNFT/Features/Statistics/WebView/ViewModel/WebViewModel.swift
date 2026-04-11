@@ -15,8 +15,7 @@ protocol WebViewModelProtocol {
 final class WebViewModel: @preconcurrency WebViewModelProtocol {
     
     let url: URL
-    
-    // Closure для уведомления View о необходимости закрыться
+
     var onClose: (() -> Void)?
     
     init(url: URL) {
