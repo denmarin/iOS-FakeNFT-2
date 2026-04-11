@@ -2,12 +2,8 @@ import UIKit
 import Kingfisher
 
 final class DeleteNftViewController: UIViewController {
-    
-    // MARK: - Public Properties
-    var completion: ((Bool) -> Void)?
-    
     // MARK: - Private Properties
-    private let nftImage: URL?
+    private let viewModel: DeleteNftViewModel
     
     private lazy var deleteNftImageView: UIImageView = {
         let imageView = UIImageView()
@@ -63,8 +59,8 @@ final class DeleteNftViewController: UIViewController {
     }()
     
     // MARK: - Init
-    init(nftImage: URL?) {
-        self.nftImage = nftImage
+    init(viewModel: DeleteNftViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .overFullScreen
     }
@@ -80,7 +76,7 @@ final class DeleteNftViewController: UIViewController {
         setupBlurBackground()
         setupLayout()
         
-        if let url = nftImage {
+        if let url = viewModel.nftImage {
             deleteNftImageView.kf.setImage(with: url)
         }
     }
@@ -117,13 +113,13 @@ final class DeleteNftViewController: UIViewController {
     // MARK: - @objc Methods
     @objc private func didTapDelete() {
         dismiss(animated: true) { [weak self] in
-            self?.completion?(true)
+            self?.viewModel.confirmDelete()
         }
     }
     
     @objc private func didTapCancel() {
         dismiss(animated: true) { [weak self] in
-            self?.completion?(false)
+            self?.viewModel.cancelDelete()
         }
     }
 }

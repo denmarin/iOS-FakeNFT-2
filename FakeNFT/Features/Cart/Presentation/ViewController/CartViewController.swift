@@ -193,17 +193,15 @@ extension CartViewController: CartTableViewCellDelegate {
         showDeleteConfirmation(for: nft)
     }
     
-    private func showDeleteConfirmation(for nft: Nft) {
-        let deleteVC = DeleteNftViewController(nftImage: nft.images.first)
-        deleteVC.modalPresentationStyle = .overFullScreen
-        deleteVC.modalTransitionStyle = .crossDissolve
-        
-        deleteVC.completion = { [weak self] confirmed in
-            if confirmed {
+    func showDeleteConfirmation(for nft: Nft) {
+        let deleteVM = DeleteNftViewModel(nftImage: nft.images.first) { [weak self] isConfirmed in
+            if isConfirmed {
                 self?.viewModel.removeNft(nft)
             }
         }
         
+        let deleteVC = DeleteNftViewController(viewModel: deleteVM)
+        deleteVC.modalTransitionStyle = .crossDissolve
         present(deleteVC, animated: true)
     }
 }

@@ -11,6 +11,9 @@ final class CartViewModel {
     var onError: ((ErrorModel) -> Void)?
     
     // MARK: - Private Properties
+    private let service: CartService
+    private let storage: CartSortStorageProtocol
+    
     private(set) var items: [Nft] = [] {
         didSet { onChange?() }
     }
@@ -19,26 +22,13 @@ final class CartViewModel {
         didSet { onLoadingChange?(isLoading) }
     }
     
-    private let service: CartService
-    private let sortTypeKey = "CartSortTypeKey"
-    private let userDefaults = UserDefaults.standard
-    
-    private var currentSortType: CartSortType {
-        get {
-            guard let savedValue = userDefaults.string(forKey: sortTypeKey),
-                  let type = CartSortType(rawValue: savedValue) else {
-                return .name
-            }
-            return type
-        }
-        set {
-            userDefaults.set(newValue.rawValue, forKey: sortTypeKey)
-        }
-    }
-    
     // MARK: - Init
-    init(service: CartService = CartServiceImpl()) {
+    init(
+        service: CartService = CartServiceImpl(),
+        storage: CartSortStorageProtocol = CartSortStorage()
+    ) {
         self.service = service
+        self.storage = storage
     }
     
     // MARK: - Public Methods
@@ -48,7 +38,21 @@ final class CartViewModel {
         Task {
             do {
                 let fetchedNfts = try await service.loadCart()
-                self.items = fetchedNfts
+                //                self.items = fetchedNfts
+                // ВРЕМЕННО: Если сервер пуст, добавляем мок
+                if fetchedNfts.isEmpty {
+                    let mockNft = Nft(
+                        id: "1",
+                        images: [URL(string: "https://code.s3.yandex.net/Mobile/iOS/NFT/Blue/Bonnie/1.png")!],
+                        name: "April",
+                        price: 1.78,
+                        rating: 3,
+                        author: "1",
+                        description: "",
+                        website: URL(string: "https://yandex.ru")!
+                    )
+                    self.items = [mockNft] } else { self.items = fetchedNfts }
+                
                 self.applySort()
                 self.isLoading = false
             } catch {
@@ -89,13 +93,13 @@ final class CartViewModel {
     }
     
     func sort(by type: CartSortType) {
-        currentSortType = type
+        storage.sortType = type
         applySort()
     }
     
     // MARK: - Private Methods
     private func applySort() {
-        switch currentSortType {
+        switch storage.sortType {
         case .price:
             items.sort { $0.price < $1.price }
         case .rating:

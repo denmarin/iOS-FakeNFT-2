@@ -18,7 +18,9 @@ final class CartServiceImpl: CartService {
     func loadCart() async throws -> [Nft] {
         let order = try await networkClient.send(request: OrderRequest(), type: Order.self)
         
-        if order.nfts.isEmpty { return [] }
+        guard !order.nfts.isEmpty else {
+            return []
+        }
         
         return try await withThrowingTaskGroup(of: Nft.self) { group in
             for id in order.nfts {

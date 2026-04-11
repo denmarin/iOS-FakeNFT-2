@@ -11,6 +11,16 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     // MARK: - Static Properties
     static let identifier = "CartCell"
     
+    // MARK: - Private Static Properties
+    private static let priceFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 2
+        formatter.decimalSeparator = ","
+        return formatter
+    }()
+    
     // MARK: - Private Properties
     private lazy var nftImageView: UIImageView = {
         let imageView = UIImageView()
@@ -130,13 +140,19 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
             ]
         ) { result in
             switch result {
-            case .success(_):
+            case .success:
                 self.nftImageView.contentMode = .scaleAspectFill
-            case .failure(_):
+            case .failure:
                 self.nftImageView.contentMode = .center
                 self.nftImageView.image = AssetImages.System.noSign
             }
         }
+    }
+    
+    // MARK: - Private Static Methods
+    private static func priceString(from price: Double) -> String {
+        let value = priceFormatter.string(from: NSNumber(value: price)) ?? String(format: "%.2f", price)
+        return "\(value) ETH"
     }
     
     // MARK: - Private Methods
@@ -206,16 +222,6 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
                 starView.tintColor = .ypLightGrey
             }
         }
-    }
-    
-    private static func priceString(from price: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 2
-        formatter.decimalSeparator = ","
-        let value = formatter.string(from: NSNumber(value: price)) ?? "\(price)"
-        return "\(value) ETH"
     }
     
     // MARK: - @objc Methods
