@@ -50,7 +50,12 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
     private lazy var favoriteTapButton: UIButton = {
         let button = UIButton(type: .custom)
         button.backgroundColor = .clear
-        button.addTarget(self, action: #selector(didTapFavorite), for: .touchUpInside)
+        button.addAction(
+            UIAction { [weak self] _ in
+                self?.onFavoriteTap?()
+            },
+            for: .touchUpInside
+        )
         return button
     }()
 
@@ -95,7 +100,12 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
     private lazy var cartTapButton: UIButton = {
         let button = UIButton(type: .custom)
         button.backgroundColor = .clear
-        button.addTarget(self, action: #selector(didTapCart), for: .touchUpInside)
+        button.addAction(
+            UIAction { [weak self] _ in
+                self?.onCartTap?()
+            },
+            for: .touchUpInside
+        )
         return button
     }()
 
@@ -128,20 +138,20 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
 
         if let imageURL = model.imageURL {
             nftImageView.kf.indicatorType = .activity
-            nftImageView.kf.setImage(with: imageURL)
+            let targetSize = resolvedImageTargetSize()
+            let processor = DownsamplingImageProcessor(size: targetSize)
+            nftImageView.kf.setImage(
+                with: imageURL,
+                options: [
+                    .processor(processor),
+                    .scaleFactor(UIScreen.main.scale),
+                    .cacheOriginalImage,
+                    .backgroundDecode
+                ]
+            )
         } else {
             nftImageView.image = nil
         }
-    }
-
-    @objc
-    private func didTapFavorite() {
-        onFavoriteTap?()
-    }
-
-    @objc
-    private func didTapCart() {
-        onCartTap?()
     }
 
     private func configureRating(_ rawRating: Int) {
@@ -239,6 +249,14 @@ final class CatalogCollectionNftCell: UICollectionViewCell, ReuseIdentifying {
 
     private static func resolveIcon(image: UIImage) -> UIImage? {
         trimTransparentInsets(from: image)
+    }
+
+    private func resolvedImageTargetSize() -> CGSize {
+        let size = imageContainerView.bounds.size
+        guard size.width > 0, size.height > 0 else {
+            return CGSize(width: 240, height: 240)
+        }
+        return size
     }
 
     private static func trimTransparentInsets(from image: UIImage) -> UIImage {

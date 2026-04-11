@@ -1,4 +1,5 @@
 import UIKit
+import Kingfisher
 
 final class CatalogCollectionCell: UITableViewCell, ReuseIdentifying {
 
@@ -80,6 +81,7 @@ final class CatalogCollectionCell: UITableViewCell, ReuseIdentifying {
         super.prepareForReuse()
         nameLabel.text = nil
         nftCountLabel.text = nil
+        coverImageView.kf.cancelDownloadTask()
         coverImageView.image = nil
         coverImageView.isHidden = true
         coverOverlayView.backgroundColor = CatalogColors.overlayStrong
@@ -88,16 +90,39 @@ final class CatalogCollectionCell: UITableViewCell, ReuseIdentifying {
     func configure(with model: CatalogCollectionCellViewModel) {
         nameLabel.text = model.name
         nftCountLabel.text = model.formattedNftCount
+
         if let coverImage = UIImage(named: model.coverImageName) {
             coverImageView.image = coverImage
             coverImageView.isHidden = false
             coverOverlayView.backgroundColor = CatalogColors.overlaySoft
+        } else if let coverURL = CatalogRemoteURL.make(from: model.coverImageName) {
+            coverImageView.isHidden = false
+            coverOverlayView.backgroundColor = CatalogColors.overlaySoft
+            coverImageView.kf.indicatorType = .activity
+            let processor = DownsamplingImageProcessor(size: resolvedCoverTargetSize())
+            coverImageView.kf.setImage(
+                with: coverURL,
+                options: [
+                    .processor(processor),
+                    .scaleFactor(UIScreen.main.scale),
+                    .cacheOriginalImage,
+                    .backgroundDecode
+                ]
+            )
         } else {
             coverImageView.image = nil
             coverImageView.isHidden = true
             coverOverlayView.backgroundColor = CatalogColors.overlayStrong
             CatalogColors.applyCoverPlaceholder(to: coverColorColumns, seed: model.name)
         }
+    }
+
+    private func resolvedCoverTargetSize() -> CGSize {
+        let size = coverView.bounds.size
+        guard size.width > 0, size.height > 0 else {
+            return CGSize(width: 360, height: 140)
+        }
+        return size
     }
 
     private func setupLayout() {

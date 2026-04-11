@@ -7,7 +7,7 @@ struct CatalogCollectionDetailsHeaderViewModel: Sendable {
     let authorName: String
 }
 
-struct CatalogCollectionNftCellViewModel: Sendable {
+struct CatalogCollectionNftCellViewModel: Sendable, Equatable {
     let id: String
     let name: String
     let imageURL: URL?
@@ -17,7 +17,7 @@ struct CatalogCollectionNftCellViewModel: Sendable {
     let isInCart: Bool
 }
 
-enum CatalogCollectionDetailsViewState {
+enum CatalogCollectionDetailsViewState: Sendable {
     case loading
     case content([CatalogCollectionNftCellViewModel])
     case failed(message: String)

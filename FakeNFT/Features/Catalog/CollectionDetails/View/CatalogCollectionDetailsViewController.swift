@@ -1,4 +1,5 @@
 import UIKit
+import Kingfisher
 
 final class CatalogCollectionDetailsViewController: UIViewController {
     private enum Layout {
@@ -20,7 +21,20 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         static let gridLineSpacing: CGFloat = 16
         static let gridColumnCount: CGFloat = 3
         static let preferredGridItemWidth: CGFloat = 108
+        static let prefetchSkipCount = 9
     }
+
+    private enum Section {
+        case main
+    }
+
+    private struct ItemIdentifier: Hashable {
+        let nftID: String
+        let occurrence: Int
+    }
+
+    private typealias DataSource = UICollectionViewDiffableDataSource<Section, ItemIdentifier>
+    private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, ItemIdentifier>
 
     private enum Icons {
         static let back = "chevron.left"
@@ -47,7 +61,12 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         button.setImage(UIImage(systemName: Icons.back, withConfiguration: symbolConfiguration), for: .normal)
         button.tintColor = .black
         button.backgroundColor = .clear
-        button.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
+        button.addAction(
+            UIAction { [weak self] _ in
+                self?.navigateBack()
+            },
+            for: .touchUpInside
+        )
         return button
     }()
 
@@ -131,7 +150,6 @@ final class CatalogCollectionDetailsViewController: UIViewController {
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.register(CatalogCollectionNftCell.self)
-        collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.allowsSelection = false
         collectionView.backgroundColor = .clear
@@ -140,7 +158,11 @@ final class CatalogCollectionDetailsViewController: UIViewController {
     }()
 
     private var collectionHeightConstraint: NSLayoutConstraint?
-    private var cellModels: [CatalogCollectionNftCellViewModel] = []
+    private var dataSource: DataSource?
+    private var cellModelsByItemID: [ItemIdentifier: CatalogCollectionNftCellViewModel] = [:]
+    private var orderedItemIDs: [ItemIdentifier] = []
+    private var prefetchedImageURLs: Set<URL> = []
+    private var imagePrefetchers: [UUID: ImagePrefetcher] = [:]
 
     init(viewModel: CatalogCollectionDetailsViewModel) {
         self.viewModel = viewModel
@@ -152,9 +174,14 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         nil
     }
 
+    deinit {
+        imagePrefetchers.values.forEach { $0.stop() }
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         buildLayout()
+        setupDataSource()
         bindViewModel()
         applyHeader(viewModel.headerViewModel)
         viewModel.viewDidLoad()
@@ -283,15 +310,48 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         }
     }
 
+    private func setupDataSource() {
+        dataSource = DataSource(collectionView: collectionView) { [weak self] collectionView, indexPath, itemID in
+            guard let self, let model = self.cellModelsByItemID[itemID] else {
+                return UICollectionViewCell()
+            }
+            let cell: CatalogCollectionNftCell = collectionView.dequeueReusableCell(indexPath: indexPath)
+            cell.configure(with: model)
+            cell.onFavoriteTap = { [weak self] in
+                self?.viewModel.didTapFavorite(for: model.id)
+            }
+            cell.onCartTap = { [weak self] in
+                self?.viewModel.didTapCart(for: model.id)
+            }
+            return cell
+        }
+    }
+
     private func applyHeader(_ header: CatalogCollectionDetailsHeaderViewModel) {
         titleLabel.text = header.title
         descriptionLabel.text = header.description
         authorNameLabel.text = header.authorName
 
+        coverImageView.kf.cancelDownloadTask()
+
         if let coverImage = UIImage(named: header.coverImageName) {
             coverImageView.image = coverImage
             coverImageView.isHidden = false
             coverOverlayView.backgroundColor = CatalogColors.overlaySoft
+        } else if let coverURL = CatalogRemoteURL.make(from: header.coverImageName) {
+            coverImageView.isHidden = false
+            coverOverlayView.backgroundColor = CatalogColors.overlaySoft
+            coverImageView.kf.indicatorType = .activity
+            let processor = DownsamplingImageProcessor(size: resolvedCoverTargetSize())
+            coverImageView.kf.setImage(
+                with: coverURL,
+                options: [
+                    .processor(processor),
+                    .scaleFactor(UIScreen.main.scale),
+                    .cacheOriginalImage,
+                    .backgroundDecode
+                ]
+            )
         } else {
             coverImageView.image = nil
             coverImageView.isHidden = true
@@ -307,9 +367,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
 
         case .content(let models):
             hideLoading()
-            cellModels = models
-            collectionView.reloadData()
-            updateCollectionHeightIfNeeded()
+            applyContent(models)
 
         case .failed(let message):
             hideLoading()
@@ -317,10 +375,75 @@ final class CatalogCollectionDetailsViewController: UIViewController {
                 message: message,
                 actionText: NSLocalizedString("Error.repeat", comment: "")
             ) { [weak self] in
-                self?.viewModel.viewDidLoad()
+                self?.viewModel.retryLoading()
             }
             showError(errorModel)
         }
+    }
+
+    private func applyContent(_ models: [CatalogCollectionNftCellViewModel]) {
+        let previousModelsByItemID = cellModelsByItemID
+        let previousItemIDs = orderedItemIDs
+
+        var occurrenceByNftID: [String: Int] = [:]
+        var modelsByItemID: [ItemIdentifier: CatalogCollectionNftCellViewModel] = [:]
+        var itemIDs: [ItemIdentifier] = []
+        itemIDs.reserveCapacity(models.count)
+
+        for model in models {
+            let occurrence = occurrenceByNftID[model.id, default: 0]
+            occurrenceByNftID[model.id] = occurrence + 1
+
+            let itemID = ItemIdentifier(nftID: model.id, occurrence: occurrence)
+            modelsByItemID[itemID] = model
+            itemIDs.append(itemID)
+        }
+
+        cellModelsByItemID = modelsByItemID
+        orderedItemIDs = itemIDs
+
+        let changedItemIDs = itemIDs.filter { itemID in
+            guard let previous = previousModelsByItemID[itemID], let current = modelsByItemID[itemID] else {
+                return false
+            }
+            return previous != current
+        }
+
+        var snapshot = Snapshot()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(itemIDs, toSection: .main)
+        if !changedItemIDs.isEmpty {
+            snapshot.reloadItems(changedItemIDs)
+        }
+        dataSource?.apply(snapshot, animatingDifferences: !previousItemIDs.isEmpty) { [weak self] in
+            guard let self else { return }
+            self.updateCollectionHeightIfNeeded()
+            self.prefetchImages(for: models)
+        }
+    }
+
+    private func prefetchImages(for models: [CatalogCollectionNftCellViewModel]) {
+        let urls = Set(models.dropFirst(Layout.prefetchSkipCount).compactMap(\.imageURL))
+        let newURLs = urls.subtracting(prefetchedImageURLs)
+        guard !newURLs.isEmpty else {
+            return
+        }
+        prefetchedImageURLs.formUnion(newURLs)
+
+        let prefetcherID = UUID()
+        let prefetcher = ImagePrefetcher(
+            urls: Array(newURLs),
+            options: [
+                .scaleFactor(UIScreen.main.scale),
+                .backgroundDecode
+            ]
+        ) { [weak self] _, _, _ in
+            Task { @MainActor [weak self] in
+                self?.imagePrefetchers.removeValue(forKey: prefetcherID)
+            }
+        }
+        imagePrefetchers[prefetcherID] = prefetcher
+        prefetcher.start()
     }
 
     private func updateCollectionHeightIfNeeded() {
@@ -346,30 +469,16 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         scrollView.verticalScrollIndicatorInsets = indicatorInsets
     }
 
-    @objc
-    private func didTapBack() {
+    private func resolvedCoverTargetSize() -> CGSize {
+        let size = coverView.bounds.size
+        guard size.width > 0, size.height > 0 else {
+            return CGSize(width: UIScreen.main.bounds.width, height: Layout.coverHeight)
+        }
+        return size
+    }
+
+    private func navigateBack() {
         navigationController?.popViewController(animated: true)
-    }
-}
-
-extension CatalogCollectionDetailsViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        cellModels.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell: CatalogCollectionNftCell = collectionView.dequeueReusableCell(indexPath: indexPath)
-        let model = cellModels[indexPath.row]
-        let nftID = model.id
-
-        cell.configure(with: model)
-        cell.onFavoriteTap = { [weak self] in
-            self?.viewModel.didTapFavorite(for: nftID)
-        }
-        cell.onCartTap = { [weak self] in
-            self?.viewModel.didTapCart(for: nftID)
-        }
-        return cell
     }
 }
 
