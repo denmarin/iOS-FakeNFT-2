@@ -95,7 +95,7 @@ final class CatalogCollectionCell: UITableViewCell, ReuseIdentifying {
             coverImageView.image = coverImage
             coverImageView.isHidden = false
             coverOverlayView.backgroundColor = CatalogColors.overlaySoft
-        } else if let coverURL = makeRemoteURL(from: model.coverImageName) {
+        } else if let coverURL = CatalogRemoteURL.make(from: model.coverImageName) {
             coverImageView.isHidden = false
             coverOverlayView.backgroundColor = CatalogColors.overlaySoft
             coverImageView.kf.indicatorType = .activity
@@ -115,14 +115,6 @@ final class CatalogCollectionCell: UITableViewCell, ReuseIdentifying {
             coverOverlayView.backgroundColor = CatalogColors.overlayStrong
             CatalogColors.applyCoverPlaceholder(to: coverColorColumns, seed: model.name)
         }
-    }
-
-    private func makeRemoteURL(from source: String) -> URL? {
-        guard let url = URL(string: source) else { return nil }
-        guard let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
-            return nil
-        }
-        return url
     }
 
     private func resolvedCoverTargetSize() -> CGSize {

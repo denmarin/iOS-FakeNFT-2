@@ -338,7 +338,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
             coverImageView.image = coverImage
             coverImageView.isHidden = false
             coverOverlayView.backgroundColor = CatalogColors.overlaySoft
-        } else if let coverURL = makeRemoteURL(from: header.coverImageName) {
+        } else if let coverURL = CatalogRemoteURL.make(from: header.coverImageName) {
             coverImageView.isHidden = false
             coverOverlayView.backgroundColor = CatalogColors.overlaySoft
             coverImageView.kf.indicatorType = .activity
@@ -358,14 +358,6 @@ final class CatalogCollectionDetailsViewController: UIViewController {
             coverOverlayView.backgroundColor = CatalogColors.overlayStrong
             CatalogColors.applyCoverPlaceholder(to: coverColorColumns, seed: header.title)
         }
-    }
-
-    private func makeRemoteURL(from source: String) -> URL? {
-        guard let url = URL(string: source) else { return nil }
-        guard let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
-            return nil
-        }
-        return url
     }
 
     private func render(_ state: CatalogCollectionDetailsViewState) {
