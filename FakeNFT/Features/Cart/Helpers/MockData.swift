@@ -8,7 +8,7 @@ enum MockData {
             name: "April",
             price: 1.78,
             rating: 3,
-            authorId: "1",
+            author: "1",
             description: "",
             website: URL(string: "https://yandex.ru")!
         ),
@@ -18,7 +18,7 @@ enum MockData {
             name: "Greena",
             price: 1.78,
             rating: 4,
-            authorId: "2",
+            author: "2",
             description: "",
             website: URL(string: "https://yandex.ru")!
         ),
@@ -28,7 +28,7 @@ enum MockData {
             name: "Spring",
             price: 1.78,
             rating: 5,
-            authorId: "3",
+            author: "3",
             description: "",
             website: URL(string: "https://yandex.ru")!
         )

@@ -1,6 +1,6 @@
 import UIKit
 
-final class CartViewController: UIViewController {
+final class CartViewController: UIViewController, ErrorView {
     // MARK: - Private Properties
     private let viewModel: CartViewModel
     
@@ -23,6 +23,17 @@ final class CartViewController: UIViewController {
         return view
     }()
     
+    private lazy var  emptyCartLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Корзина пуста"
+        label.font = .systemFont(ofSize: 17, weight: .bold)
+        label.textColor = UIColor(resource: .ypBlack)
+        label.textAlignment = .center
+        label.isHidden = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     // MARK: - Init
     init(viewModel: CartViewModel) {
         self.viewModel = viewModel
@@ -37,7 +48,8 @@ final class CartViewController: UIViewController {
     // MARK: - Overrides Methods
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .ypWhite
+        bottomView.alpha = 0
         
         setupNavBar()
         setupLayout()
@@ -54,15 +66,16 @@ final class CartViewController: UIViewController {
             target: self,
             action: #selector(filterButtonTapped)
         )
-        filterButton.tintColor = UIColor(resource: .ypBlack)
-        navigationItem.rightBarButtonItem = filterButton
         
-        navigationItem.title = nil
+        filterButton.tintColor = UIColor(resource: .ypBlack).withAlphaComponent(0)
+        filterButton.isEnabled = false
+        navigationItem.rightBarButtonItem = filterButton
     }
     
     private func setupLayout() {
         view.addSubview(tableView)
         view.addSubview(bottomView)
+        view.addSubview(emptyCartLabel)
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
@@ -73,32 +86,88 @@ final class CartViewController: UIViewController {
             bottomView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bottomView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            bottomView.heightAnchor.constraint(equalToConstant: 76)
+            bottomView.heightAnchor.constraint(equalToConstant: 76),
+            
+            emptyCartLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyCartLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
     
     private func bindViewModel() {
         viewModel.onChange = { [weak self] in
-            Task { @MainActor in
-                self?.tableView.reloadData()
-                self?.bottomView.configure(
-                    count: self?.viewModel.totalAmount ?? 0,
-                    price: self?.viewModel.totalPrice ?? 0.0
-                )
+            guard let self else { return }
+            self.updateUI()
+        }
+        
+        viewModel.onLoadingChange = { [weak self] isLoading in
+            if isLoading {
+                UIBlockingProgressHUD.show()
+            } else {
+                UIBlockingProgressHUD.dismiss()
+                self?.updateUI()
+            }
+        }
+        
+        viewModel.onError = { [weak self] errorModel in
+            self?.showError(errorModel)
+        }
+    }
+    
+    private func updateUI() {
+        guard !viewModel.isLoading else { return }
+        
+        let isEmpty = viewModel.items.isEmpty
+        
+        emptyCartLabel.isHidden = !isEmpty
+        tableView.isHidden = isEmpty
+        bottomView.isHidden = isEmpty
+        
+        navigationItem.rightBarButtonItem?.isEnabled = !isEmpty
+        navigationItem.rightBarButtonItem?.tintColor = isEmpty ? .clear : UIColor(resource: .ypBlack)
+        
+        if !isEmpty {
+            tableView.reloadData()
+            bottomView.configure(
+                count: viewModel.totalAmount,
+                price: viewModel.totalPrice
+            )
+            
+            UIView.animate(withDuration: 0.3) {
+                self.bottomView.alpha = 1
             }
         }
     }
     
     // MARK: - @objc Methods
     @objc private func filterButtonTapped() {
-        // TODO: Process code
+        let alert = UIAlertController(
+            title: "Сортировка",
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+        
+        alert.addAction(UIAlertAction(title: "По цене", style: .default) { [weak self] _ in
+            self?.viewModel.sort(by: .price)
+        })
+        
+        alert.addAction(UIAlertAction(title: "По рейтингу", style: .default) { [weak self] _ in
+            self?.viewModel.sort(by: .rating)
+        })
+        
+        alert.addAction(UIAlertAction(title: "По названию", style: .default) { [weak self] _ in
+            self?.viewModel.sort(by: .name)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Закрыть", style: .cancel))
+        
+        present(alert, animated: true)
     }
 }
 
 // MARK: - Extensions
 extension CartViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        viewModel.totalAmount
+        viewModel.items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -109,7 +178,30 @@ extension CartViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
-        cell.configure(with: viewModel.items[indexPath.row])
+        let nft = viewModel.items[indexPath.row]
+        cell.configure(with: nft)
+        cell.delegate = self
         return cell
+    }
+}
+
+extension CartViewController: CartTableViewCellDelegate {
+    func didTapDeleteButton(on cell: CartTableViewCell) {
+        guard let indexPath = tableView.indexPath(for: cell) else { return }
+        let nft = viewModel.items[indexPath.row]
+        
+        showDeleteConfirmation(for: nft)
+    }
+    
+    func showDeleteConfirmation(for nft: Nft) {
+        let deleteVM = DeleteNftViewModel(nftImage: nft.images.first) { [weak self] isConfirmed in
+            if isConfirmed {
+                self?.viewModel.removeNft(nft)
+            }
+        }
+        
+        let deleteVC = DeleteNftViewController(viewModel: deleteVM)
+        deleteVC.modalTransitionStyle = .crossDissolve
+        present(deleteVC, animated: true)
     }
 }

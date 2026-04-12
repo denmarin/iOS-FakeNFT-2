@@ -1,9 +1,25 @@
 import UIKit
 import Kingfisher
 
+protocol CartTableViewCellDelegate: AnyObject {
+    func didTapDeleteButton(on cell: CartTableViewCell)
+}
+
 final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
+    weak var delegate: CartTableViewCellDelegate?
+    
     // MARK: - Static Properties
     static let identifier = "CartCell"
+    
+    // MARK: - Private Static Properties
+    private static let priceFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 2
+        formatter.decimalSeparator = ","
+        return formatter
+    }()
     
     // MARK: - Private Properties
     private lazy var nftImageView: UIImageView = {
@@ -12,6 +28,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 12
+        imageView.backgroundColor = .ypLightGrey
         return imageView
     }()
     
@@ -50,9 +67,10 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     }()
     
     private lazy var deleteButton: UIButton = {
-        let button = UIButton(type: .system)
+        let button = UIButton(type: .custom)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setImage(UIImage(resource: .cartImageDelete), for: .normal)
+        button.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
         button.tintColor = .ypBlack
         return button
     }()
@@ -109,25 +127,32 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     }
     
     func setImage(url: URL?) {
-        let placeholderName = AssetImages.System.placeholder
-        let placeholder = UIImage(systemName: placeholderName)
+        nftImageView.kf.cancelDownloadTask()
         
-        if let urlString = url?.absoluteString, urlString.hasPrefix("local://") {
-            let imageName = urlString.replacingOccurrences(of: "local://", with: "")
-            
-            if let localImage = UIImage(named: imageName) {
-                nftImageView.image = localImage
-                nftImageView.contentMode = .scaleAspectFill
-                nftImageView.tintColor = nil
-                nftImageView.backgroundColor = .clear
-                return
+        let processor = RoundCornerImageProcessor(cornerRadius: 12)
+        nftImageView.kf.setImage(
+            with: url,
+            placeholder: AssetImages.System.placeholder,
+            options: [
+                .processor(processor),
+                .transition(.fade(0.3)),
+                .cacheOriginalImage
+            ]
+        ) { result in
+            switch result {
+            case .success:
+                self.nftImageView.contentMode = .scaleAspectFill
+            case .failure:
+                self.nftImageView.contentMode = .center
+                self.nftImageView.image = AssetImages.System.noSign
             }
         }
-        
-        nftImageView.image = placeholder
-        nftImageView.contentMode = .center
-        nftImageView.tintColor = .systemGray4
-        nftImageView.backgroundColor = .systemGray6
+    }
+    
+    // MARK: - Private Static Methods
+    private static func priceString(from price: Double) -> String {
+        let value = priceFormatter.string(from: NSNumber(value: price)) ?? String(format: "%.2f", price)
+        return "\(value) ETH"
     }
     
     // MARK: - Private Methods
@@ -199,13 +224,8 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         }
     }
     
-    private static func priceString(from price: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 2
-        formatter.decimalSeparator = ","
-        let value = formatter.string(from: NSNumber(value: price)) ?? "\(price)"
-        return "\(value) ETH"
+    // MARK: - @objc Methods
+    @objc private func deleteTapped() {
+        delegate?.didTapDeleteButton(on: self)
     }
 }
