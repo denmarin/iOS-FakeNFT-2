@@ -106,6 +106,7 @@ final class NftCollectionViewModel: @preconcurrency NftCollectionViewModelProtoc
             self.nfts = collection.sorted { $0.rating > $1.rating }
             self.state = .content
             
+            
         } catch {
             self.state = .error(error.localizedDescription)
         }

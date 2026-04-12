@@ -82,8 +82,11 @@ final class StatisticsViewController: UIViewController {
         tableView.delegate = self
         
         setupConstraints()
-        
         bindViewModel()
+        
+        viewModel.onErrorShowAlert = { [weak self] in
+            self?.showErrorAlert()
+        }
         
         Task {
             await viewModel.loadUsers()
@@ -122,7 +125,7 @@ final class StatisticsViewController: UIViewController {
     }
     
     @objc private func sortButtonTapped() {
-        let alert = UIAlertController()
+        let alert = UIAlertController(title: "Сортировка", message: nil, preferredStyle: .actionSheet)
         
         let byRating = UIAlertAction(title: "По рейтингу", style: .default) { [weak self] _ in
             self?.viewModel.sortUsers(by: .byRating)
@@ -131,12 +134,36 @@ final class StatisticsViewController: UIViewController {
         let byName = UIAlertAction(title: "По имени", style: .default) { [weak self] _ in
             self?.viewModel.sortUsers(by: .byName)
         }
+        let cancelButton = UIAlertAction(title: "Закрыть", style: .cancel, handler: nil)
         
         alert.addAction(byRating)
         alert.addAction(byName)
+        alert.addAction(cancelButton)
 
         present(alert, animated: true)
         
+    }
+    
+    private func showErrorAlert() {
+        let alert = UIAlertController(
+            title: "Не удалось получить данные",
+            message: nil,
+            preferredStyle: .alert
+        )
+        
+        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel, handler: nil)
+        
+        let retryAction = UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+            
+            Task {
+                await self?.viewModel.loadUsers()
+            }
+        }
+        
+        alert.addAction(cancelAction)
+        alert.addAction(retryAction)
+        
+        present(alert, animated: true, completion: nil)
     }
 
     private func bindViewModel() {

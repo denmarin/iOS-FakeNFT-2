@@ -13,6 +13,8 @@ final class NftCollectionViewController: UIViewController {
     private let viewModel: NftCollectionViewModelProtocol
     private var cancellables = Set<AnyCancellable>()
     
+    private var hasShownErrorAlert = false
+    
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
         collectionView.backgroundColor = .white
@@ -143,11 +145,42 @@ final class NftCollectionViewController: UIViewController {
         ])
     }
     
+    private func showErrorAlert() {
+        let alert = UIAlertController(
+            title: "Не удалось получить данные",
+            message: nil,
+            preferredStyle: .alert
+        )
+        
+        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel, handler: nil)
+        
+        let retryAction = UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+            self?.hasShownErrorAlert = false
+            
+            Task {
+                await self?.viewModel.loadNfts()
+            }
+        }
+        
+        alert.addAction(cancelAction)
+        alert.addAction(retryAction)
+        
+        present(alert, animated: true, completion: nil)
+    }
+    
     private func bindViewModel() {
         viewModel.statePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 self?.updateUI(for: state)
+                if case .error = state {
+                    if self?.hasShownErrorAlert == false {
+                        self?.hasShownErrorAlert = true
+                        self?.showErrorAlert()
+                    }
+                } else {
+                    self?.hasShownErrorAlert = false
+                }
             }
             .store(in: &cancellables)
 

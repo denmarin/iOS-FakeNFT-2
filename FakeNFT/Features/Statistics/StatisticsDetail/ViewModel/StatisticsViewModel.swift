@@ -16,6 +16,7 @@ protocol StatisticsViewModelProtocol {
     func loadUsers() async
     func refreshUsers() async
     func sortUsers(by type: SortType)
+    
 }
 
 enum State {
@@ -35,6 +36,8 @@ final class StatisticsViewModel: StatisticsViewModelProtocol {
     
     private let service: StatisticsServiceProtocol
     
+    var onErrorShowAlert: (() -> Void)?
+    
     init(service: StatisticsServiceProtocol) {
         self.service = service
     }
@@ -53,6 +56,7 @@ final class StatisticsViewModel: StatisticsViewModelProtocol {
         } catch {
             print("❌ Ошибка сети или парсинга: \(error)")
             self.state = .error("Ошибка загрузки")
+            onErrorShowAlert?()
         }
     }
     
