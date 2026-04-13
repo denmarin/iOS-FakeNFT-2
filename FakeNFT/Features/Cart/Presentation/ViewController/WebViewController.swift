@@ -23,11 +23,12 @@ final class WebViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
-    // MARK: - Lifecycle
+    // MARK: - Overrides Methods
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
@@ -43,7 +44,6 @@ final class WebViewController: UIViewController {
         webView.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
     }
     
-    // MARK: - KVO
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == #keyPath(WKWebView.estimatedProgress) {
             progressView.progress = Float(webView.estimatedProgress)
@@ -62,10 +62,6 @@ final class WebViewController: UIViewController {
         )
         backButton.tintColor = .ypBlack
         navigationItem.leftBarButtonItem = backButton
-    }
-    
-    @objc private func didTapBackButton() {
-        navigationController?.popViewController(animated: true)
     }
     
     private func setupView() {
@@ -88,5 +84,10 @@ final class WebViewController: UIViewController {
             webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+    
+    // MARK: - @objc Methods
+    @objc private func didTapBackButton() {
+        navigationController?.popViewController(animated: true)
     }
 }

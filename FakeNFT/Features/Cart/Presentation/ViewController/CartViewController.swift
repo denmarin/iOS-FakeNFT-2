@@ -57,8 +57,13 @@ final class CartViewController: UIViewController, ErrorView {
         
         viewModel.loadData()
         bottomView.onCheckoutButtonTapped = { [weak self] in
-                self?.showPaymentMethodScreen()
-            }
+            self?.showPaymentMethodScreen()
+        }
+    }
+    
+    // MARK: - Public Methods
+    func refreshCartData() {
+        viewModel.refreshCart()
     }
     
     // MARK: - Private Methods
@@ -149,6 +154,8 @@ final class CartViewController: UIViewController, ErrorView {
         
         navigationController?.pushViewController(paymentVC, animated: true)
     }
+    
+    
     
     // MARK: - @objc Methods
     @objc private func filterButtonTapped() {

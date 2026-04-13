@@ -55,6 +55,7 @@ final class CartServiceImpl: CartService {
     }
     
     func clearCart() async throws {
-        // TODO: Process code
+        let request = OrderUpdateRequest(nfts: [])
+        _ = try await networkClient.send(request: request, type: Order.self)
     }
 }

@@ -111,7 +111,7 @@ final class PaymentMethodViewController: UIViewController {
         
         viewModel.onPaymentResult = { [weak self] isSuccess in
             if isSuccess {
-                // self?.showSuccess()
+                self?.showSuccess()
                 print("Оплата успешна")
             } else {
                 self?.showError()
@@ -155,11 +155,23 @@ final class PaymentMethodViewController: UIViewController {
         ])
     }
     
-    //    private func showSuccess() {
-    //        let successVC = SuccessPaymentViewController()
-    //        successVC.modalPresentationStyle = .fullScreen
-    //        present(successVC, animated: true)
-    //    }
+    private func showSuccess() {
+        let successVM = SuccessViewModel()
+        let successVC = SuccessViewController(viewModel: successVM)
+        
+        successVM.onReturn = { [weak self] in
+            self?.dismiss(animated: true) {
+                self?.navigationController?.popToRootViewController(animated: true)
+                
+                if let cartVC = self?.navigationController?.viewControllers.first as? CartViewController {
+                    cartVC.refreshCartData()
+                }
+            }
+        }
+        
+        successVC.modalPresentationStyle = .fullScreen
+        present(successVC, animated: true)
+    }
     
     private func showError() {
         let alert = UIAlertController(title: "Не удалось произвести оплату", message: nil, preferredStyle: .alert)

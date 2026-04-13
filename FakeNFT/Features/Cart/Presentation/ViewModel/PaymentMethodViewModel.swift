@@ -48,11 +48,15 @@ final class PaymentMethodViewModel {
             isLoading = true
             do {
                 let result = try await service.payOrder(currencyId: currencyId)
+                
                 if result.success {
-                    try await service.clearCart() 
+                    try? await service.clearCart()
+                    onPaymentResult?(true)
+                } else {
+                    onPaymentResult?(false)
                 }
-                onPaymentResult?(result.success)
             } catch {
+                print("Payment error: \(error)")
                 onPaymentResult?(false)
             }
             isLoading = false

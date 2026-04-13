@@ -83,6 +83,18 @@ final class CartViewModel {
         applySort()
     }
     
+    func refreshCart() {
+        Task {
+            isLoading = true
+            do {
+                items = try await service.loadCart()
+            } catch {
+                print("Ошибка обновления корзины: \(error)")
+            }
+            isLoading = false
+        }
+    }
+    
     // MARK: - Private Methods
     private func applySort() {
         switch storage.sortType {
