@@ -12,7 +12,7 @@ struct CatalogCollectionsRequest: NetworkRequest {
     }
 
     var endpoint: URL? {
-        var components = URLComponents(string: "\(RequestConstants.baseURL)/api/v1/collections")
+        var components = CatalogRequestFactory.collectionsComponents()
         var queryItems = [
             URLQueryItem(name: "page", value: String(page)),
             URLQueryItem(name: "size", value: String(size))

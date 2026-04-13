@@ -24,6 +24,18 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         static let prefetchSkipCount = 9
     }
 
+    private enum Constants {
+        static var authorPrefixTitle: String {
+            String(localized: "catalog.collectionDetails.author.prefix")
+        }
+
+        static var retryActionTitle: String {
+            String(localized: "catalog.common.retry")
+        }
+
+        static let authorWebURLString = "https://practicum.yandex.ru/ios-developer/"
+    }
+
     private enum Section {
         case main
     }
@@ -115,7 +127,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         let label = UILabel()
         label.font = .caption2
         label.textColor = CatalogColors.textSecondary
-        label.text = "Автор коллекции:"
+        label.text = Constants.authorPrefixTitle
         return label
     }()
 
@@ -123,8 +135,14 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         let label = UILabel()
         label.font = .caption2
         label.textColor = CatalogColors.link
+        label.isUserInteractionEnabled = true
         return label
     }()
+
+    private lazy var authorTapGestureRecognizer = UITapGestureRecognizer(
+        target: self,
+        action: #selector(didTapAuthorName)
+    )
 
     private lazy var authorStack: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [authorPrefixLabel, authorNameLabel])
@@ -197,6 +215,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        guard isMovingFromParent || isBeingDismissed else { return }
         guard let navigationController, let previousNavigationBarHidden else { return }
         navigationController.setNavigationBarHidden(previousNavigationBarHidden, animated: animated)
     }
@@ -270,6 +289,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
             authorStack.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
             authorStack.trailingAnchor.constraint(lessThanOrEqualTo: titleLabel.trailingAnchor)
         ])
+        authorNameLabel.addGestureRecognizer(authorTapGestureRecognizer)
 
         contentView.addSubview(descriptionLabel)
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -307,6 +327,9 @@ final class CatalogCollectionDetailsViewController: UIViewController {
     private func bindViewModel() {
         viewModel.onStateChange = { [weak self] state in
             self?.render(state)
+        }
+        viewModel.onAllNftsLoadingChange = { [weak self] isLoading in
+            self?.setAllNftsLoadingIndicatorVisible(isLoading)
         }
     }
 
@@ -366,18 +389,25 @@ final class CatalogCollectionDetailsViewController: UIViewController {
             showLoading()
 
         case .content(let models):
-            hideLoading()
             applyContent(models)
 
         case .failed(let message):
             hideLoading()
             let errorModel = ErrorModel(
                 message: message,
-                actionText: NSLocalizedString("Error.repeat", comment: "")
+                actionText: Constants.retryActionTitle
             ) { [weak self] in
                 self?.viewModel.retryLoading()
             }
             showError(errorModel)
+        }
+    }
+
+    private func setAllNftsLoadingIndicatorVisible(_ isVisible: Bool) {
+        if isVisible {
+            showLoading()
+        } else {
+            hideLoading()
         }
     }
 
@@ -479,6 +509,16 @@ final class CatalogCollectionDetailsViewController: UIViewController {
 
     private func navigateBack() {
         navigationController?.popViewController(animated: true)
+    }
+
+    @objc
+    private func didTapAuthorName() {
+        guard let url = CatalogRemoteURL.make(from: Constants.authorWebURLString) else {
+            return
+        }
+        let webViewController = CatalogAuthorWebViewController(url: url)
+        webViewController.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(webViewController, animated: true)
     }
 }
 

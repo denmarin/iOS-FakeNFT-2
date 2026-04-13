@@ -1,18 +1,39 @@
 import Foundation
 
 struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
+    private struct PreparedIDs {
+        let uniqueIDs: [String]
+        let positionsByID: [String: [Int]]
+
+        init(_ ids: [String]) {
+            var uniqueIDs: [String] = []
+            var positionsByID: [String: [Int]] = [:]
+
+            for (index, id) in ids.enumerated() {
+                if positionsByID[id] == nil {
+                    uniqueIDs.append(id)
+                }
+                positionsByID[id, default: []].append(index)
+            }
+
+            self.uniqueIDs = uniqueIDs
+            self.positionsByID = positionsByID
+        }
+    }
+
+    private typealias NftsStreamContinuation = AsyncThrowingStream<[Nft], Error>.Continuation
+
     private let loader: CatalogNftLoader
     private let cache: CatalogNftCache
     private let maxConcurrentRequests: Int
 
     init(
         networkClient: NetworkClient,
-        maxConcurrentRequests: Int = 10,
-        cache: CatalogNftCache = CatalogNftCache()
+        maxConcurrentRequests: Int = 10
     ) {
         self.loader = CatalogNftLoader(networkClient: networkClient)
         self.maxConcurrentRequests = max(1, maxConcurrentRequests)
-        self.cache = cache
+        self.cache = CatalogNftCache()
     }
 
     func nftsStream(for collection: CatalogCollection) -> AsyncThrowingStream<[Nft], Error> {
@@ -36,7 +57,7 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
 
     private func streamNfts(
         for collection: CatalogCollection,
-        continuation: AsyncThrowingStream<[Nft], Error>.Continuation
+        continuation: NftsStreamContinuation
     ) async throws {
         let ids = collection.nftIDs
         guard !ids.isEmpty else {
@@ -44,32 +65,17 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
             return
         }
 
-        let prepared = prepareIDs(ids)
+        let prepared = PreparedIDs(ids)
         var orderedNfts = Array<Nft?>(repeating: nil, count: ids.count)
         var lastPublishedCount = 0
 
         let cachedByID = await cache.cachedNfts(for: prepared.uniqueIDs)
-        for (id, nft) in cachedByID {
-            fillOrderedNfts(
-                orderedNfts: &orderedNfts,
-                with: nft,
-                for: id,
-                positionsByID: prepared.positionsByID
-            )
-        }
-
-        let cachedNfts = orderedNfts.compactMap { $0 }
-        if !cachedNfts.isEmpty {
-            lastPublishedCount = cachedNfts.count
-            continuation.yield(cachedNfts)
-        }
+        applyCachedNfts(cachedByID, to: &orderedNfts, positionsByID: prepared.positionsByID)
+        publishNftsIfNeeded(orderedNfts, lastPublishedCount: &lastPublishedCount, continuation: continuation)
 
         let pendingIDs = prepared.uniqueIDs.filter { cachedByID[$0] == nil }
         guard !pendingIDs.isEmpty else {
-            let allNfts = orderedNfts.compactMap { $0 }
-            if allNfts.count != lastPublishedCount {
-                continuation.yield(allNfts)
-            }
+            publishNftsIfNeeded(orderedNfts, lastPublishedCount: &lastPublishedCount, continuation: continuation)
             return
         }
 
@@ -93,11 +99,7 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
                     for: id,
                     positionsByID: positionsByID
                 )
-                let partialNfts = orderedNfts.compactMap { $0 }
-                if partialNfts.count != lastPublishedCount {
-                    lastPublishedCount = partialNfts.count
-                    continuation.yield(partialNfts)
-                }
+                publishNftsIfNeeded(orderedNfts, lastPublishedCount: &lastPublishedCount, continuation: continuation)
 
                 if nextPendingIndex < pendingIDs.count {
                     let id = pendingIDs[nextPendingIndex]
@@ -107,24 +109,7 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
             }
         }
 
-        let allNfts = orderedNfts.compactMap { $0 }
-        if allNfts.count != lastPublishedCount {
-            continuation.yield(allNfts)
-        }
-    }
-
-    private func prepareIDs(_ ids: [String]) -> (uniqueIDs: [String], positionsByID: [String: [Int]]) {
-        var uniqueIDs: [String] = []
-        var positionsByID: [String: [Int]] = [:]
-
-        for (index, id) in ids.enumerated() {
-            if positionsByID[id] == nil {
-                uniqueIDs.append(id)
-            }
-            positionsByID[id, default: []].append(index)
-        }
-
-        return (uniqueIDs: uniqueIDs, positionsByID: positionsByID)
+        publishNftsIfNeeded(orderedNfts, lastPublishedCount: &lastPublishedCount, continuation: continuation)
     }
 
     private func fillOrderedNfts(
@@ -137,6 +122,32 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
         for position in positions {
             orderedNfts[position] = nft
         }
+    }
+
+    private func applyCachedNfts(
+        _ cachedByID: [String: Nft],
+        to orderedNfts: inout [Nft?],
+        positionsByID: [String: [Int]]
+    ) {
+        for (id, nft) in cachedByID {
+            fillOrderedNfts(
+                orderedNfts: &orderedNfts,
+                with: nft,
+                for: id,
+                positionsByID: positionsByID
+            )
+        }
+    }
+
+    private func publishNftsIfNeeded(
+        _ orderedNfts: [Nft?],
+        lastPublishedCount: inout Int,
+        continuation: NftsStreamContinuation
+    ) {
+        let publishedNfts = orderedNfts.compactMap { $0 }
+        guard publishedNfts.count != lastPublishedCount else { return }
+        lastPublishedCount = publishedNfts.count
+        continuation.yield(publishedNfts)
     }
 
     private func addLoadTask(
@@ -153,7 +164,7 @@ struct CatalogCollectionNftsService: CatalogCollectionNftsProviding {
     }
 }
 
-actor CatalogNftCache {
+private actor CatalogNftCache {
     private var storage: [String: Nft] = [:]
 
     func save(_ nft: Nft) {
@@ -174,7 +185,7 @@ actor CatalogNftCache {
     }
 }
 
-actor CatalogNftLoader {
+private actor CatalogNftLoader {
     private let networkClient: NetworkClient
     private var inFlightTasks: [String: Task<Nft, Error>] = [:]
 

@@ -21,7 +21,9 @@ struct CatalogCollectionCellViewModel: Equatable, Sendable {
 @MainActor
 final class CatalogViewModel {
     private enum Constants {
-        static let loadingErrorMessage = "Не удалось загрузить каталог. Попробуйте снова."
+        static var loadingErrorMessage: String {
+            String(localized: "catalog.collection.load.error")
+        }
         static let loadNextPageThreshold = 3
     }
 
