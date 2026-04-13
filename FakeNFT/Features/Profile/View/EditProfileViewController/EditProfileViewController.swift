@@ -51,8 +51,8 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
     private let saveButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitleColor(.ypWhite, for: .normal)
         button.backgroundColor = .ypBlack
-        button.tintColor = .ypWhite
         button.setTitle(String(localized: "EditProfile.saveButton.title", defaultValue: "Сохранить"), for: .normal)
         button.layer.cornerRadius = 16
         button.clipsToBounds = true

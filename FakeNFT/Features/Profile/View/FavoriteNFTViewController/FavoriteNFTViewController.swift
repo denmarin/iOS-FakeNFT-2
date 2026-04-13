@@ -6,6 +6,7 @@ final class FavoriteNFTViewController: UIViewController, LoadingView, ErrorView{
     
     private lazy var favoriteNFTCollectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: createLayout())
+        collectionView.backgroundColor = .ypWhite
         
         collectionView.allowsSelection = false
         

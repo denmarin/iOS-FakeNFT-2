@@ -96,6 +96,7 @@ final class MyNFTTableViewCell: UITableViewCell, ReuseIdentifying{
     
     
     private func setupUI(){
+        backgroundColor = .ypWhite
         let nftView = UIView()
         nftView.translatesAutoresizingMaskIntoConstraints = false
         nftView.addSubview(NFTImageView)
