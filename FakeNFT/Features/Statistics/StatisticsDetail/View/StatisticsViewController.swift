@@ -48,7 +48,7 @@ final class StatisticsViewController: UIViewController {
     
     private lazy var emptyLabel: UILabel = {
             let label = UILabel()
-            label.text = "Нет данных"
+        label.text = NSLocalizedString("No data", comment: "")
             label.textAlignment = .center
             label.font = .systemFont(ofSize: 16)
             label.textColor = .gray
@@ -128,16 +128,16 @@ final class StatisticsViewController: UIViewController {
     }
     
     @objc private func sortButtonTapped() {
-        let alert = UIAlertController(title: "Сортировка", message: nil, preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: NSLocalizedString("Sorting", comment: ""), message: nil, preferredStyle: .actionSheet)
         
-        let byRating = UIAlertAction(title: "По рейтингу", style: .default) { [weak self] _ in
+        let byRating = UIAlertAction(title: NSLocalizedString("By rating", comment: ""), style: .default) { [weak self] _ in
             self?.viewModel.sortUsers(by: .byRating)
         }
   
-        let byName = UIAlertAction(title: "По имени", style: .default) { [weak self] _ in
+        let byName = UIAlertAction(title: NSLocalizedString("By name", comment: ""), style: .default) { [weak self] _ in
             self?.viewModel.sortUsers(by: .byName)
         }
-        let cancelButton = UIAlertAction(title: "Закрыть", style: .cancel, handler: nil)
+        let cancelButton = UIAlertAction(title: NSLocalizedString("Close", comment: ""), style: .cancel, handler: nil)
         
         alert.addAction(byRating)
         alert.addAction(byName)
@@ -149,14 +149,14 @@ final class StatisticsViewController: UIViewController {
     
     private func showErrorAlert() {
         let alert = UIAlertController(
-            title: "Не удалось получить данные",
+            title: NSLocalizedString("Couldn't get the data", comment: ""),
             message: nil,
             preferredStyle: .alert
         )
         
-        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel, handler: nil)
+        let cancelAction = UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel, handler: nil)
         
-        let retryAction = UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+        let retryAction = UIAlertAction(title: NSLocalizedString("Repeat", comment: ""), style: .default) { [weak self] _ in
             
             Task {
                 await self?.viewModel.loadUsers()

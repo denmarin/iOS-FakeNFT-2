@@ -46,7 +46,7 @@ final class ProfileDetailViewController: UIViewController {
         let button = UIButton()
         button.setTitleColor(.ypBlack, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .regular)
-        button.setTitle("Перейти на сайт пользователя", for: .normal)
+        button.setTitle(NSLocalizedString("Go to the user's website", comment: ""), for: .normal)
         
         button.addTarget(self, action: #selector(websiteButtonTapped), for: .touchUpInside)
         button.layer.cornerRadius = 15
@@ -71,7 +71,7 @@ final class ProfileDetailViewController: UIViewController {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .bold)
         label.textColor = .ypBlack
-        label.text = "Коллекция NFT"
+        label.text = NSLocalizedString("Collection NFT", comment: "")
         label.translatesAutoresizingMaskIntoConstraints = false
         
         return label
