@@ -74,7 +74,7 @@ final class FavoriteNFTViewModel: ObservableObject {
                 
                 updateState()
             } catch {
-                state = .error("Не удалось удалить лайк: \(error.localizedDescription)")
+                state = .error(String(localized: "Не удалось удалить лайк: \(error.localizedDescription)"))
                 updateState()
             }
         }

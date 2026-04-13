@@ -71,7 +71,7 @@ final class MyNFTViewModel: ObservableObject {
                 applySort()
             }
         } catch {
-            state = .error(error.localizedDescription)
+            state = .error(String(localized: "Error.unknown"))
         }
     }
     

@@ -27,7 +27,6 @@ final class MyNFTTableViewCell: UITableViewCell, ReuseIdentifying{
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .bodyBold
         label.textColor = .ypBlack
-        label.numberOfLines = 1
         return label
     }()
     
@@ -45,7 +44,6 @@ final class MyNFTTableViewCell: UITableViewCell, ReuseIdentifying{
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .caption2
         label.textColor = .ypBlack
-        label.numberOfLines = 1
         label.text = String(localized: "MyNFT.priceLabel.text", defaultValue: "Цена")
         return label
     }()
@@ -55,7 +53,6 @@ final class MyNFTTableViewCell: UITableViewCell, ReuseIdentifying{
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .bodyBold
         label.textColor = .ypBlack
-        label.numberOfLines = 1
         return label
     }()
     
@@ -179,7 +176,7 @@ final class MyNFTTableViewCell: UITableViewCell, ReuseIdentifying{
         }
         titleLabel.text = nftTitle
         updateStarStack(rating: rating)
-        authorLabel.text = "от \(author)"
+        authorLabel.text = String(localized: "от \(author)")
         priceValueLabel.text = "\(price) ETH"
     }
 }
