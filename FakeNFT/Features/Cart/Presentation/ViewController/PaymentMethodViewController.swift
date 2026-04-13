@@ -193,10 +193,11 @@ final class PaymentMethodViewController: UIViewController {
     
     @objc private func didTapTerms() {
         guard let url = URL(string: "https://yandex.ru/legal/practicum_termsofuse") else { return }
-        let webVC = WebViewController(url: url)
+        
+        let webViewModel = WebViewModel(url: url)
+        let webVC = WebViewController(viewModel: webViewModel)
         
         webVC.title = ""
-        
         navigationController?.pushViewController(webVC, animated: true)
     }
 }
@@ -239,7 +240,8 @@ extension PaymentMethodViewController: UITextViewDelegate {
     func textView(_ textView: UITextView, primaryActionFor textItem: UITextItem, defaultAction: UIAction) -> UIAction? {
         if case .link(let url) = textItem.content {
             return UIAction { [weak self] _ in
-                let webVC = WebViewController(url: url)
+                let webViewModel = WebViewModel(url: url)
+                let webVC = WebViewController(viewModel: webViewModel)
                 self?.navigationController?.pushViewController(webVC, animated: true)
             }
         }

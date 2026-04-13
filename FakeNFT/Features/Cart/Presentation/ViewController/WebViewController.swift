@@ -3,7 +3,7 @@ import WebKit
 
 final class WebViewController: UIViewController {
     // MARK: - Private Properties
-    private let url: URL
+    private let viewModel: WebViewModel
     
     private lazy var webView: WKWebView = {
         let webView = WKWebView()
@@ -18,8 +18,8 @@ final class WebViewController: UIViewController {
     }()
     
     // MARK: - Init
-    init(url: URL) {
-        self.url = url
+    init(viewModel: WebViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -36,8 +36,7 @@ final class WebViewController: UIViewController {
         setupNavigationBar()
         
         webView.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
-        
-        webView.load(URLRequest(url: url))
+        webView.load(URLRequest(url: viewModel.url))
     }
     
     deinit {

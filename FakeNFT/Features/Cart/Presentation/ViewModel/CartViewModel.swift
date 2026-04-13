@@ -95,6 +95,22 @@ final class CartViewModel {
         }
     }
     
+    func clearCartOnPaymentSuccess() {
+        Task {
+            do {
+                try await service.clearCart()
+                items = []
+            } catch {
+                let errorModel = ErrorModel(
+                    message: "Не удалось очистить корзину",
+                    actionText: "Повторить",
+                    action: { [weak self] in self?.clearCartOnPaymentSuccess() }
+                )
+                onError?(errorModel)
+            }
+        }
+    }
+    
     // MARK: - Private Methods
     private func applySort() {
         switch storage.sortType {
