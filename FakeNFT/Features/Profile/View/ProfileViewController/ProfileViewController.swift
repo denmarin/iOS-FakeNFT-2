@@ -8,8 +8,11 @@ enum ProfileRow: Int, CaseIterable {
     
     var title: String {
         switch self {
-        case .myNfts: return "Мои NFT"
-        case .favorites: return "Избранные NFT"
+        case .myNfts:
+            return String(localized: "Profile.tabel.myNfts", defaultValue: "Мои NFT")
+        case .favorites:
+            return String(localized: "Profile.table.favorites", defaultValue: "Избранные NFT")
+            
         }
     }
 }
@@ -197,7 +200,7 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
             hideLoading()
             let errorModel = ErrorModel(
                 message: message,
-                actionText: "Повторить"
+                actionText: String(localized: "Error.repeat")
             ) { [weak self] in
                 self?.viewModel.onAppear()
             }

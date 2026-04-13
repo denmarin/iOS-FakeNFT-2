@@ -46,7 +46,7 @@ final class MyNFTTableViewCell: UITableViewCell, ReuseIdentifying{
         label.font = .caption2
         label.textColor = .ypBlack
         label.numberOfLines = 1
-        label.text = "Цена"
+        label.text = String(localized: "MyNFT.priceLabel.text", defaultValue: "Цена")
         return label
     }()
     
