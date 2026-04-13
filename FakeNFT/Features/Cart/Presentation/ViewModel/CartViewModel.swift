@@ -44,8 +44,8 @@ final class CartViewModel {
             } catch {
                 self.isLoading = false
                 let errorModel = ErrorModel(
-                    message: "Не удалось загрузить корзину",
-                    actionText: "Повторить",
+                    message: String(localized: "cart.error.loadCart", defaultValue: "Не удалось загрузить корзину"),
+                    actionText: String(localized: "cart.common.retry", defaultValue: "Повторить"),
                     action: { [weak self] in self?.loadData() }
                 )
                 onError?(errorModel)
@@ -67,8 +67,8 @@ final class CartViewModel {
             } catch {
                 self.isLoading = false
                 let errorModel = ErrorModel(
-                    message: "Не удалось удалить NFT из корзины",
-                    actionText: "Повторить",
+                    message: String(localized: "cart.error.removeNft", defaultValue: "Не удалось удалить NFT из корзины"),
+                    actionText: String(localized: "cart.common.retry", defaultValue: "Повторить"),
                     action: { [weak self] in
                         self?.removeNft(nft)
                     }
@@ -89,7 +89,7 @@ final class CartViewModel {
             do {
                 items = try await service.loadCart()
             } catch {
-                print("Ошибка обновления корзины: \(error)")
+                print("\(String(localized: "cart.error.refreshPrefix", defaultValue: "Ошибка обновления корзины")): \(error)")
             }
             isLoading = false
         }
@@ -102,8 +102,8 @@ final class CartViewModel {
                 items = []
             } catch {
                 let errorModel = ErrorModel(
-                    message: "Не удалось очистить корзину",
-                    actionText: "Повторить",
+                    message: String(localized: "cart.error.clearCart", defaultValue: "Не удалось очистить корзину"),
+                    actionText: String(localized: "cart.common.retry", defaultValue: "Повторить"),
                     action: { [weak self] in self?.clearCartOnPaymentSuccess() }
                 )
                 onError?(errorModel)

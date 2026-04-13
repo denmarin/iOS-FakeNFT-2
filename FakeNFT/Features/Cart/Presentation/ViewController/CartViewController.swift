@@ -25,7 +25,7 @@ final class CartViewController: UIViewController, ErrorView {
     
     private lazy var  emptyCartLabel: UILabel = {
         let label = UILabel()
-        label.text = "Корзина пуста"
+        label.text = String(localized: "cart.main.emptyState", defaultValue: "Корзина пуста")
         label.font = .systemFont(ofSize: 17, weight: .bold)
         label.textColor = UIColor(resource: .ypBlack)
         label.textAlignment = .center
@@ -160,24 +160,24 @@ final class CartViewController: UIViewController, ErrorView {
     // MARK: - @objc Methods
     @objc private func filterButtonTapped() {
         let alert = UIAlertController(
-            title: "Сортировка",
+            title: String(localized: "cart.sort.title", defaultValue: "Сортировка"),
             message: nil,
             preferredStyle: .actionSheet
         )
         
-        alert.addAction(UIAlertAction(title: "По цене", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: String(localized: "cart.sort.byPrice", defaultValue: "По цене"), style: .default) { [weak self] _ in
             self?.viewModel.sort(by: .price)
         })
         
-        alert.addAction(UIAlertAction(title: "По рейтингу", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: String(localized: "cart.sort.byRating", defaultValue: "По рейтингу"), style: .default) { [weak self] _ in
             self?.viewModel.sort(by: .rating)
         })
         
-        alert.addAction(UIAlertAction(title: "По названию", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: String(localized: "cart.sort.byName", defaultValue: "По названию"), style: .default) { [weak self] _ in
             self?.viewModel.sort(by: .name)
         })
         
-        alert.addAction(UIAlertAction(title: "Закрыть", style: .cancel))
+        alert.addAction(UIAlertAction(title: String(localized: "cart.sort.close", defaultValue: "Закрыть"), style: .cancel))
         
         present(alert, animated: true)
     }

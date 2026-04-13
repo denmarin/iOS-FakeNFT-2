@@ -27,7 +27,7 @@ final class PaymentMethodViewController: UIViewController {
     private lazy var payButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .ypBlack
-        button.setTitle("Оплатить", for: .normal)
+        button.setTitle(String(localized: "cart.payment.pay", defaultValue: "Оплатить"), for: .normal)
         button.setTitleColor(.ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
         button.layer.cornerRadius = 16
@@ -83,8 +83,8 @@ final class PaymentMethodViewController: UIViewController {
     }
     
     private func setupTermsText() {
-        let fullText = "Совершая покупку, вы соглашаетесь с условиями Пользовательского соглашения"
-        let linkText = "Пользовательского соглашения"
+        let fullText = String(localized: "cart.payment.termsFull", defaultValue: "Совершая покупку, вы соглашаетесь с условиями Пользовательского соглашения")
+        let linkText = String(localized: "cart.payment.termsLink", defaultValue: "Пользовательского соглашения")
         
         let attributedString = NSMutableAttributedString(string: fullText)
         
@@ -112,7 +112,7 @@ final class PaymentMethodViewController: UIViewController {
         viewModel.onPaymentResult = { [weak self] isSuccess in
             if isSuccess {
                 self?.showSuccess()
-                print("Оплата успешна")
+                print(String(localized: "cart.payment.paySuccessLog", defaultValue: "Оплата успешна"))
             } else {
                 self?.showError()
             }
@@ -121,7 +121,7 @@ final class PaymentMethodViewController: UIViewController {
     
     private func setupUI() {
         view.backgroundColor = .ypWhite
-        title = "Выберите способ оплаты"
+        title = String(localized: "cart.payment.title", defaultValue: "Выберите способ оплаты")
         
         [collectionView, bottomView].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -174,9 +174,13 @@ final class PaymentMethodViewController: UIViewController {
     }
     
     private func showError() {
-        let alert = UIAlertController(title: "Не удалось произвести оплату", message: nil, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Отмена", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+        let alert = UIAlertController(
+            title: String(localized: "cart.payment.alertPayFailed", defaultValue: "Не удалось произвести оплату"),
+            message: nil,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: String(localized: "cart.payment.cancel", defaultValue: "Отмена"), style: .cancel))
+        alert.addAction(UIAlertAction(title: String(localized: "cart.common.retry", defaultValue: "Повторить"), style: .default) { [weak self] _ in
             self?.viewModel.pay()
         })
         present(alert, animated: true)

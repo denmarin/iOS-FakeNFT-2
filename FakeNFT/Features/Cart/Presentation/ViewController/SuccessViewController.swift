@@ -14,7 +14,7 @@ final class SuccessViewController: UIViewController {
     
     private let successLabel: UILabel = {
         let label = UILabel()
-        label.text = "Успех! Оплата прошла,\nпоздравляем с покупкой!"
+        label.text = String(localized: "cart.success.message", defaultValue: "Успех! Оплата прошла,\nпоздравляем с покупкой!")
         label.font = .systemFont(ofSize: 22, weight: .bold)
         label.textColor = .ypBlack
         label.textAlignment = .center
@@ -25,7 +25,7 @@ final class SuccessViewController: UIViewController {
     private lazy var returnButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .ypBlack
-        button.setTitle("Вернуться в корзину", for: .normal)
+        button.setTitle(String(localized: "cart.success.returnToCart", defaultValue: "Вернуться в корзину"), for: .normal)
         button.setTitleColor(.ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
         button.layer.cornerRadius = 16

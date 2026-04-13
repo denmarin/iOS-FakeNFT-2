@@ -54,7 +54,7 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .systemFont(ofSize: 13, weight: .regular)
         label.textColor = .ypBlack
-        label.text = "Цена"
+        label.text = String(localized: "cart.cell.priceLabel", defaultValue: "Цена")
         return label
     }()
     
@@ -153,7 +153,8 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     // MARK: - Private Static Methods
     private static func priceString(from price: Double) -> String {
         let value = priceFormatter.string(from: NSNumber(value: price)) ?? String(format: "%.2f", price)
-        return "\(value) ETH"
+        let format = String(localized: "cart.format.priceEth", defaultValue: "%@ ETH")
+        return String(format: format, locale: .current, arguments: [value] as [CVarArg])
     }
     
     // MARK: - Private Methods

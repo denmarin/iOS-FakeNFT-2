@@ -29,7 +29,7 @@ final class CartBottomView: UIView {
     private lazy var checkoutButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = .ypBlack
-        button.setTitle("К оплате", for: .normal)
+        button.setTitle(String(localized: "cart.bottom.checkout", defaultValue: "К оплате"), for: .normal)
         button.setTitleColor(.ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
         button.layer.cornerRadius = 16
@@ -52,8 +52,11 @@ final class CartBottomView: UIView {
     
     // MARK: - Public Methods
     func configure(count: Int, price: Double) {
-        countLabel.text = "\(count) NFT"
-        priceLabel.text = String(format: "%.2f ETH", price).replacingOccurrences(of: ".", with: ",")
+        let countFormat = String(localized: "cart.bottom.nftCountFormat", defaultValue: "%lld NFT")
+        countLabel.text = String(format: countFormat, locale: .current, arguments: [count] as [CVarArg])
+        let formattedPrice = String(format: "%.2f", price).replacingOccurrences(of: ".", with: ",")
+        let priceFormat = String(localized: "cart.format.priceEth", defaultValue: "%@ ETH")
+        priceLabel.text = String(format: priceFormat, locale: .current, arguments: [formattedPrice] as [CVarArg])
     }
     
     // MARK: - Private Methods
