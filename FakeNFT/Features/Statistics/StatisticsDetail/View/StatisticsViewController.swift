@@ -11,6 +11,7 @@ import Combine
 final class StatisticsViewController: UIViewController {
     
     private let viewModel: StatisticsViewModel
+    private let assembly: StatisticsAssembly
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - UI Elements
@@ -55,6 +56,7 @@ final class StatisticsViewController: UIViewController {
             label.translatesAutoresizingMaskIntoConstraints = false
             return label
     }()
+    
     private lazy var sortButton: UIButton = {
         let sortButton = UIButton()
         sortButton.setImage(.sort, for: .normal)
@@ -66,8 +68,9 @@ final class StatisticsViewController: UIViewController {
         return sortButton
     }()
 
-    init(viewModel: StatisticsViewModel) {
+    init(viewModel: StatisticsViewModel, assembly: StatisticsAssembly) {
         self.viewModel = viewModel
+        self.assembly = assembly
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -244,15 +247,19 @@ extension StatisticsViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        let profile = viewModel.users[indexPath.row]
+        let user = viewModel.users[indexPath.row]
+        let profile = user.toProfile()
         
-        let detailViewModel = ProfileDetailViewModel(profile: profile.toProfile(), currentUserId: RequestConstants.token)
+        let assembly = StatisticsAssembly()
         
-        let nftService =  StatisticsService(networkClient: DefaultNetworkClient())
+        let detailViewModel = self.assembly.makeProfileDetailViewModel(
+            profile: profile,
+            currentUserId: RequestConstants.token
+        )
         
         let detailViewController = ProfileDetailViewController(
             viewModel: detailViewModel,
-            nftService: nftService
+            assembly: self.assembly
         )
         
         navigationController?.pushViewController(detailViewController, animated: true)

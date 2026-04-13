@@ -11,7 +11,7 @@ import Kingfisher
 final class ProfileDetailViewController: UIViewController {
 
     private let viewModel: ProfileDetailViewModelProtocol
-    private let nftService: StatisticsServiceProtocol
+    private let assembly: StatisticsAssembly
 
     private lazy var avatarImage: UIImageView = {
         let image = UIImageView()
@@ -98,9 +98,9 @@ final class ProfileDetailViewController: UIViewController {
     }()
    
     
-    init(viewModel: ProfileDetailViewModelProtocol, nftService: StatisticsServiceProtocol) {
+    init(viewModel: ProfileDetailViewModelProtocol, assembly: StatisticsAssembly) {
         self.viewModel = viewModel
-        self.nftService = nftService
+        self.assembly = assembly
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -213,33 +213,19 @@ final class ProfileDetailViewController: UIViewController {
     
     @objc private func websiteButtonTapped() {
         guard let website = viewModel.profile.website else { return }
-  
-        let webViewModel = WebViewModel(url: website)
-
-        let webVC = WebViewController(viewModel: webViewModel)
+ 
+        let webVC = assembly.makeWebViewController(url: website)
  
         let navController = UINavigationController(rootViewController: webVC)
 
         navController.modalPresentationStyle = .fullScreen
-        
         present(navController, animated: true, completion: nil)
     }
     
     @objc private func collectionNftTapped() {
-        let networkClient = DefaultNetworkClient()
         
-        let listService = NftListService(networkClient: networkClient)
-        let updateService = ProfileServiceUpdate(networkClient: networkClient)
-        let readService = ProfileService(networkClient: networkClient) 
+        let collectionVC = assembly.makeNftCollectionViewController(ownerProfile: viewModel.profile)
         
-        let collectionViewModel = NftCollectionViewModel(
-            ownerProfile: viewModel.profile,
-            nftListService: listService,
-            profileUpdateService: updateService,
-            myProfileService: readService
-        )
-        
-        let collectionVC = NftCollectionViewController(viewModel: collectionViewModel)
         navigationController?.pushViewController(collectionVC, animated: true)
     }
 }
