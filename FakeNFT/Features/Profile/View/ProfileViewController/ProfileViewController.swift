@@ -263,7 +263,9 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
         case .webView:
             let webViewViewModel = WebViewViewModel()
             let webVC = WebViewController(viewModel: webViewViewModel)
-            navigationController?.pushViewController(webVC, animated: true)
+            let navvc = UINavigationController(rootViewController: webVC)
+            navvc.modalPresentationStyle = .fullScreen
+            present(navvc,animated: true)
         }
     }
     
