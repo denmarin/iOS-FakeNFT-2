@@ -18,7 +18,9 @@ enum MyNftViewState {
 final class MyNFTViewModel: ObservableObject {
     @Published private(set) var state: MyNftViewState = .loading
     
-    private var allNfts: [NftCard] = []
+    private var myNftsId: [String]
+    private var myNfts: [NftCard]
+    private let provider: ProfileDataProvider
     
     private let storageKey = "MyNftSortTypeKey"
     
@@ -35,21 +37,41 @@ final class MyNFTViewModel: ObservableObject {
         }
     }
     
-    init(nfts: [NftCard]) {
-        self.allNfts = nfts
-        loadData()
+    init(nfts: [NftCard],nftsIds: [String], provider: ProfileDataProvider) {
+        self.myNfts = nfts
+        self.myNftsId = nftsIds
+        self.provider = provider
     }
     
-    func loadData() {
-        state = .loading
+    func loadData() async {
+        myNfts = myNfts.filter { myNftsId.contains($0.id) }
         
-        Task {
-            try? await Task.sleep(nanoseconds: 500_000_000)
-            if allNfts.isEmpty {
+        let loadedIds = myNfts.map { $0.id }
+        let idsToFetch = myNftsId.filter { !loadedIds.contains($0) }
+        
+        guard !idsToFetch.isEmpty else {
+            if myNfts.isEmpty {
                 state = .empty
             } else {
                 applySort()
             }
+            return
+        }
+        
+        state = .loading
+        
+        do {
+            let newNfts = try await provider.loadNFTs(ids: idsToFetch)
+            
+            self.myNfts += newNfts
+            
+            if myNfts.isEmpty {
+                state = .empty
+            } else {
+                applySort()
+            }
+        } catch {
+            state = .error(error.localizedDescription)
         }
     }
     
@@ -62,11 +84,11 @@ final class MyNFTViewModel: ObservableObject {
         let sortedNfts: [NftCard]
         switch currentSort {
         case .price:
-            sortedNfts = allNfts.sorted { $0.priceText > $1.priceText }
+            sortedNfts = myNfts.sorted { $0.price > $1.price }
         case .rating:
-            sortedNfts = allNfts.sorted { $0.rating > $1.rating }
+            sortedNfts = myNfts.sorted { $0.rating > $1.rating }
         case .name:
-            sortedNfts = allNfts.sorted { $0.title < $1.title }
+            sortedNfts = myNfts.sorted { $0.title < $1.title }
         }
         state = .content(sortedNfts)
     }

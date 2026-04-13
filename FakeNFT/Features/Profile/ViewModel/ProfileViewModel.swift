@@ -17,27 +17,37 @@ final class ProfileViewModelImpl: ProfileViewModel {
     }
     
     func onAppear() {
-        stateSubject.send(.loading)
+        if screenData == nil {
+            stateSubject.send(.loading)
+        }
+        
         Task {
-            let data = await provider.loadProfile()
-            self.screenData = data
-            self.stateSubject.send(.content(data))
+            do {
+                let data = try await provider.loadProfile()
+                self.screenData = data
+                
+                self.stateSubject.send(.content(data))
+            } catch {
+                if screenData == nil {
+                    stateSubject.send(.error(error.localizedDescription))
+                }
+            }
         }
     }
     
     func didTapMyNfts() {
         guard let data = screenData else { return }
-        routeSubject.send(.myNfts(data.myNfts))
+        routeSubject.send(.myNfts(data))
     }
     
     func didTapFavorites() {
         guard let data = screenData else { return }
-        routeSubject.send(.favorites(data.favorites))
+        routeSubject.send(.favorites(data))
     }
     
     func didTapEdit() {
         guard let data = screenData else { return }
-        routeSubject.send(.editProfile(data.header))
+        routeSubject.send(.editProfile(data))
     }
     
     func didTapWebsite(){
@@ -49,6 +59,8 @@ final class ProfileViewModelImpl: ProfileViewModel {
         
         let updatedData = ProfileScreenData(
             header: newHeader,
+            myNftsIds: currentData.myNftsIds,
+            favoritesIds: currentData.favoritesIds,
             myNfts: currentData.myNfts,
             favorites: currentData.favorites
         )
@@ -57,11 +69,13 @@ final class ProfileViewModelImpl: ProfileViewModel {
         self.stateSubject.send(.content(updatedData))
     }
     
-    func updateFavorite(_ newFavorites: [NftCard]){
+    func updateFavorite(_ newFavorites: [NftCard],_ newFavoritesIds: [String]){
         guard let currentData = screenData else { return }
         
         let updatedData = ProfileScreenData(
             header: currentData.header,
+            myNftsIds: currentData.myNftsIds,
+            favoritesIds: newFavoritesIds,
             myNfts: currentData.myNfts,
             favorites: newFavorites
         )

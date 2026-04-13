@@ -8,40 +8,84 @@ enum FavoriteNftViewState {
     case error(String)
 }
 
-
 @MainActor
 final class FavoriteNFTViewModel: ObservableObject {
     @Published private(set) var state: FavoriteNftViewState = .loading
     
-    private var allNfts: [NftCard] = []
-    private let onDelete: ([NftCard]) -> Void
+    private var favoriteNftsIds: [String]
+    private var favoriteNfts: [NftCard]
+    private let onDelete: ([NftCard], [String]) -> Void
+    private let header: ProfileHeader
+    private let provider: ProfileDataProvider
     
-    init(nfts: [NftCard], onDelete: @escaping ([NftCard]) -> Void) {
-        self.allNfts = nfts
+    init(nftsIds: [String],nftCards: [NftCard],dataProvider: ProfileDataProvider,header: ProfileHeader, onDelete: @escaping ([NftCard], [String]) -> Void) {
+        self.favoriteNftsIds = nftsIds
+        self.favoriteNfts = nftCards
+        self.provider = dataProvider
+        self.header = header
         self.onDelete = onDelete
-        loadData()
     }
     
-    func loadData() {
-        state = .loading
+    func loadData() async {
         
-        Task {
-            try? await Task.sleep(nanoseconds: 500_000_000)
+        favoriteNfts = favoriteNfts.filter { favoriteNftsIds.contains($0.id) }
+        
+        let loadedIds = favoriteNfts.map { $0.id }
+        let idsToFetch = favoriteNftsIds.filter { !loadedIds.contains($0) }
+        
+        guard !idsToFetch.isEmpty else {
             updateState()
+            return
+        }
+        
+        state = .loading
+        do {
+            
+            let newNfts = try await provider.loadNFTs(ids: idsToFetch)
+            
+            let updatedList = favoriteNfts + newNfts
+            
+            self.favoriteNfts = updatedList
+            self.updateState()
+        } catch {
+            state = .error(error.localizedDescription)
         }
     }
     
-    func didTapLikeButton(nftId: String){
-        allNfts.removeAll(where:{ $0.id == nftId } )
-        onDelete(allNfts)
-        updateState()
+    func didTapLikeButton(nftId: String) {
+        let updatedLikesIds = favoriteNftsIds.filter { $0 != nftId }
+        print(updatedLikesIds)
+        state = .loading
+        
+        Task {
+            do {
+                let _ = try await provider.updateProfile(
+                    name: header.name,
+                    description: header.description,
+                    website: header.website ?? "",
+                    avatar: header.avatar?.absoluteString ?? "",
+                    likes: updatedLikesIds
+                )
+                
+                self.favoriteNfts.removeAll(where: { $0.id == nftId })
+                self.favoriteNftsIds = updatedLikesIds
+                
+                onDelete(favoriteNfts, favoriteNftsIds)
+                
+                updateState()
+            } catch {
+                state = .error("Не удалось удалить лайк: \(error.localizedDescription)")
+                updateState()
+            }
+        }
     }
     
+    
     private func updateState() {
-        if allNfts.isEmpty {
+        if favoriteNfts.isEmpty {
             state = .empty
         } else {
-            state = .content(allNfts)
+            state = .content(favoriteNfts)
         }
     }
 }

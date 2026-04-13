@@ -8,8 +8,8 @@ enum ProfileViewState: Equatable {
 }
 
 enum ProfileRoute: Equatable {
-    case editProfile(ProfileHeader)
-    case myNfts([NftCard])
-    case favorites([NftCard])
+    case editProfile(ProfileScreenData)
+    case myNfts(ProfileScreenData)
+    case favorites(ProfileScreenData)
     case webView
 }

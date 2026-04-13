@@ -1,4 +1,5 @@
 import UIKit
+import Kingfisher
 
 final class MyNFTTableViewCell: UITableViewCell, ReuseIdentifying{
     private let NFTImageView: UIImageView = {
@@ -75,6 +76,25 @@ final class MyNFTTableViewCell: UITableViewCell, ReuseIdentifying{
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        NFTImageView.kf.cancelDownloadTask()
+        NFTImageView.image = nil
+        
+        titleLabel.text = nil
+        authorLabel.text = nil
+        priceValueLabel.text = nil
+        
+        starStack.arrangedSubviews.forEach {
+            starStack.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        
+        likeButton.setImage(UIImage(resource: .favoriteImageOff), for: .normal)
+    }
+    
+    
     private func setupUI(){
         let nftView = UIView()
         nftView.translatesAutoresizingMaskIntoConstraints = false
@@ -144,11 +164,21 @@ final class MyNFTTableViewCell: UITableViewCell, ReuseIdentifying{
         }
     }
     
-    func config(nftImageName: String, nftTitle: String, rating: Int, author: String, price: String){
-        NFTImageView.image = UIImage(named: nftImageName)
+    func config(nftImage: URL?, nftTitle: String, rating: Int, author: String, price: Double){
+        NFTImageView.kf.cancelDownloadTask()
+        NFTImageView.image = nil
+        if let url = nftImage {
+            NFTImageView.kf.setImage(
+                with: url,
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2))
+                ]
+            )
+        }
         titleLabel.text = nftTitle
         updateStarStack(rating: rating)
         authorLabel.text = "от \(author)"
-        priceValueLabel.text = price
+        priceValueLabel.text = "\(price) ETH"
     }
 }
