@@ -67,9 +67,10 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     }()
     
     private lazy var deleteButton: UIButton = {
-        let button = UIButton(type: .custom)
+        let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setImage(UIImage(resource: .cartImageDelete), for: .normal)
+        button.setTitleColor(UIColor.ypBlack, for: .normal)
         button.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
         button.tintColor = .ypBlack
         return button

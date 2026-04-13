@@ -1,6 +1,8 @@
 import UIKit
 
 final class CartBottomView: UIView {
+    var onCheckoutButtonTapped: (() -> Void)?
+    
     // MARK: - Private Properties
     private lazy var infoStackView: UIStackView = {
         let stack = UIStackView()
@@ -32,6 +34,7 @@ final class CartBottomView: UIView {
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(didTapCheckout), for: .touchUpInside)
         return button
     }()
     
@@ -76,5 +79,10 @@ final class CartBottomView: UIView {
             checkoutButton.leadingAnchor.constraint(equalTo: infoStackView.trailingAnchor, constant: 24),
             checkoutButton.heightAnchor.constraint(equalToConstant: 44)
         ])
+    }
+    
+    // MARK: - @objc Methods
+    @objc private func didTapCheckout() {
+        onCheckoutButtonTapped?()
     }
 }

@@ -56,6 +56,9 @@ final class CartViewController: UIViewController, ErrorView {
         bindViewModel()
         
         viewModel.loadData()
+        bottomView.onCheckoutButtonTapped = { [weak self] in
+                self?.showPaymentMethodScreen()
+            }
     }
     
     // MARK: - Private Methods
@@ -136,6 +139,15 @@ final class CartViewController: UIViewController, ErrorView {
                 self.bottomView.alpha = 1
             }
         }
+    }
+    
+    private func showPaymentMethodScreen() {
+        let paymentViewModel = PaymentMethodViewModel()
+        let paymentVC = PaymentMethodViewController(viewModel: paymentViewModel)
+        
+        paymentVC.hidesBottomBarWhenPushed = true
+        
+        navigationController?.pushViewController(paymentVC, animated: true)
     }
     
     // MARK: - @objc Methods

@@ -1,0 +1,236 @@
+import UIKit
+
+final class PaymentMethodViewController: UIViewController {
+    // MARK: - Private Properties
+    private let viewModel: PaymentMethodViewModel
+    
+    private lazy var collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 7
+        layout.minimumLineSpacing = 7
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.register(CurrencyCollectionViewCell.self, forCellWithReuseIdentifier: CurrencyCollectionViewCell.reuseIdentifier)
+        cv.backgroundColor = .clear
+        cv.dataSource = self
+        cv.delegate = self
+        return cv
+    }()
+    
+    private lazy var bottomView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .ypLightGrey
+        view.layer.cornerRadius = 12
+        view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        return view
+    }()
+    
+    private lazy var payButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.backgroundColor = .ypBlack
+        button.setTitle("Оплатить", for: .normal)
+        button.setTitleColor(.ypWhite, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+        button.layer.cornerRadius = 16
+        button.addTarget(self, action: #selector(didTapPay), for: .touchUpInside)
+        return button
+    }()
+    
+    private lazy var termsTextView: UITextView = {
+        let textView = UITextView()
+        textView.backgroundColor = .clear
+        textView.isEditable = false
+        textView.isScrollEnabled = false
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
+        textView.delegate = self
+        return textView
+    }()
+    
+    // MARK: - Init
+    init(viewModel: PaymentMethodViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+    
+    // MARK: - Overrides Methods
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupNavigationBar()
+        setupUI()
+        setupTermsText()
+        bindViewModel()
+        viewModel.fetchCurrencies()
+    }
+    
+    // MARK: - Private Methods
+    private func setupNavigationBar() {
+        let backImage = UIImage(named: "backButton")?.withRenderingMode(.alwaysTemplate)
+        
+        let backButton = UIBarButtonItem(
+            image: backImage,
+            style: .plain,
+            target: self,
+            action: #selector(didTapBackButton)
+        )
+        
+        backButton.tintColor = .ypBlack
+        navigationItem.leftBarButtonItem = backButton
+    }
+    
+    private func setupTermsText() {
+        let fullText = "Совершая покупку, вы соглашаетесь с условиями Пользовательского соглашения"
+        let linkText = "Пользовательского соглашения"
+        
+        let attributedString = NSMutableAttributedString(string: fullText)
+        
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 6
+        
+        attributedString.addAttribute(
+            .paragraphStyle,
+            value: paragraphStyle,
+            range: NSRange(location: 0, length: fullText.count)
+        )
+        
+        let range = (fullText as NSString).range(of: linkText)
+        attributedString.addAttribute(.link, value: "https://yandex.ru/legal/practicum_termsofuse", range: range)
+        attributedString.addAttribute(.font, value: UIFont.systemFont(ofSize: 13), range: NSRange(location: 0, length: fullText.count))
+        
+        termsTextView.attributedText = attributedString
+    }
+    
+    private func bindViewModel() {
+        viewModel.onCurrenciesLoaded = { [weak self] _ in
+            self?.collectionView.reloadData()
+        }
+        
+        viewModel.onPaymentResult = { [weak self] isSuccess in
+            if isSuccess {
+                // self?.showSuccess()
+                print("Оплата успешна")
+            } else {
+                self?.showError()
+            }
+        }
+    }
+    
+    private func setupUI() {
+        view.backgroundColor = .ypWhite
+        title = "Выберите способ оплаты"
+        
+        [collectionView, bottomView].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
+        }
+        
+        [termsTextView, payButton].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            bottomView.addSubview($0)
+        }
+        
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            collectionView.bottomAnchor.constraint(equalTo: bottomView.topAnchor),
+            
+            bottomView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bottomView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bottomView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            termsTextView.topAnchor.constraint(equalTo: bottomView.topAnchor, constant: 16),
+            termsTextView.leadingAnchor.constraint(equalTo: bottomView.leadingAnchor, constant: 16),
+            termsTextView.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -16),
+            
+            payButton.topAnchor.constraint(equalTo: termsTextView.bottomAnchor, constant: 16),
+            payButton.leadingAnchor.constraint(equalTo: bottomView.leadingAnchor, constant: 16),
+            payButton.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -16),
+            payButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            payButton.heightAnchor.constraint(equalToConstant: 60)
+        ])
+    }
+    
+    //    private func showSuccess() {
+    //        let successVC = SuccessPaymentViewController()
+    //        successVC.modalPresentationStyle = .fullScreen
+    //        present(successVC, animated: true)
+    //    }
+    
+    private func showError() {
+        let alert = UIAlertController(title: "Не удалось произвести оплату", message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Отмена", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+            self?.viewModel.pay()
+        })
+        present(alert, animated: true)
+    }
+    
+    // MARK: - @objc Methods
+    @objc private func didTapPay() {
+        viewModel.pay()
+    }
+    
+    @objc private func didTapBackButton() {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @objc private func didTapTerms() {
+        guard let url = URL(string: "https://yandex.ru/legal/practicum_termsofuse") else { return }
+        let webVC = WebViewController(url: url)
+        
+        webVC.title = ""
+        
+        navigationController?.pushViewController(webVC, animated: true)
+    }
+}
+
+// MARK: - Extensions
+extension PaymentMethodViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return viewModel.currencies.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CurrencyCollectionViewCell.reuseIdentifier, for: indexPath) as? CurrencyCollectionViewCell else {
+            return UICollectionViewCell()
+        }
+        cell.configure(with: viewModel.currencies[indexPath.item])
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let width = (collectionView.bounds.width - 7) / 2
+        return CGSize(width: width, height: 46)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        viewModel.selectCurrency(at: indexPath.item)
+        if let cell = collectionView.cellForItem(at: indexPath) as? CurrencyCollectionViewCell {
+            cell.setSelected(true)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        if let cell = collectionView.cellForItem(at: indexPath) as? CurrencyCollectionViewCell {
+            cell.setSelected(false)
+        }
+    }
+}
+
+extension PaymentMethodViewController: UITextViewDelegate {
+    @available(iOS 17.0, *)
+    func textView(_ textView: UITextView, primaryActionFor textItem: UITextItem, defaultAction: UIAction) -> UIAction? {
+        if case .link(let url) = textItem.content {
+            return UIAction { [weak self] _ in
+                let webVC = WebViewController(url: url)
+                self?.navigationController?.pushViewController(webVC, animated: true)
+            }
+        }
+        return defaultAction
+    }
+}
