@@ -19,7 +19,7 @@ final class AppTabBarController: UITabBarController {
     }
 
     private func setupTabs() {
-        let catalogController = TestCatalogViewController(servicesAssembly: servicesAssembly)
+        let catalogController = CatalogAssembly(servicesAssembly: servicesAssembly).build()
 
         let cartViewModel = CartViewModel()
         let cartController = CartViewController(viewModel: cartViewModel)
