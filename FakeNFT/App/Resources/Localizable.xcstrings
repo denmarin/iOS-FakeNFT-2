@@ -290,23 +290,6 @@
         }
       }
     },
-    "cart.payment.paySuccessLog" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Payment successful"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оплата успешна"
-          }
-        }
-      }
-    },
     "cart.payment.termsFull" : {
       "extractionState" : "manual",
       "localizations" : {

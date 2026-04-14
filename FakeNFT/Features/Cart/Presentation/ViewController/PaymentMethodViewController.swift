@@ -88,6 +88,12 @@ final class PaymentMethodViewController: UIViewController {
         
         let attributedString = NSMutableAttributedString(string: fullText)
         
+            attributedString.addAttribute(
+                .foregroundColor,
+                value: UIColor.ypBlack,
+                range: NSRange(location: 0, length: fullText.count)
+            )
+        
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 6
         
@@ -112,11 +118,18 @@ final class PaymentMethodViewController: UIViewController {
         viewModel.onPaymentResult = { [weak self] isSuccess in
             if isSuccess {
                 self?.showSuccess()
-                print(String(localized: "cart.payment.paySuccessLog", defaultValue: "Оплата успешна"))
             } else {
                 self?.showError()
             }
         }
+        
+        viewModel.onLoadingStateChanged = { isLoading in
+                if isLoading {
+                    UIBlockingProgressHUD.show()
+                } else {
+                    UIBlockingProgressHUD.dismiss()
+                }
+            }
     }
     
     private func setupUI() {
