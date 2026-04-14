@@ -17,7 +17,7 @@ final class NftCollectionViewController: UIViewController {
     
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
-        collectionView.backgroundColor = .white
+        collectionView.backgroundColor = .ypWhite
         collectionView.showsVerticalScrollIndicator = false
         collectionView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -55,7 +55,7 @@ final class NftCollectionViewController: UIViewController {
         label.text = NSLocalizedString("No NFT", comment: "")
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 16)
-        label.textColor = .gray
+        label.textColor = .ypLightGrey
         label.isHidden = true
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -83,10 +83,10 @@ final class NftCollectionViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .ypWhite
         title = NSLocalizedString("Collection NFT", comment: "")
 
-        navigationController?.navigationBar.tintColor = .black
+        navigationController?.navigationBar.tintColor = .ypBlack
         navigationItem.backButtonTitle = ""
     }
     

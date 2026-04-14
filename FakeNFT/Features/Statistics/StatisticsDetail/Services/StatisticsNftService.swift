@@ -27,7 +27,7 @@ final class StatisticsNftService: StatisticsNftServiceProtocol {
     
     func loadNfts(ids: [String]) async throws -> [Nft] {
         try await withThrowingTaskGroup(of: Nft.self) { group in
-            for id in ids {
+            for _ in ids {
                 group.addTask {
                     let request = StatisticsUsersRequest()
                     return try await self.networkClient.send(request: request, type: Nft.self)

@@ -18,7 +18,7 @@ final class StatisticsViewController: UIViewController {
     private let tableView: UITableView = {
         let table = UITableView()
         table.separatorStyle = .none
-        table.backgroundColor = .white
+        table.backgroundColor = .ypWhite
         table.translatesAutoresizingMaskIntoConstraints = false
         
         table.register(StatisticUserCell.self, forCellReuseIdentifier: StatisticUserCell.reuseIdentifier)
@@ -59,7 +59,7 @@ final class StatisticsViewController: UIViewController {
     
     private lazy var sortButton: UIButton = {
         let sortButton = UIButton()
-        sortButton.setImage(.sort, for: .normal)
+        sortButton.setImage(UIImage.sort.withRenderingMode(.alwaysOriginal), for: .normal)
         sortButton.tintColor = .ypBlack
         sortButton.addTarget(self, action: #selector(sortButtonTapped), for: .touchUpInside)
         sortButton.translatesAutoresizingMaskIntoConstraints = false
@@ -81,6 +81,7 @@ final class StatisticsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.backButtonTitle = ""
+        view.backgroundColor = .ypWhite
         tableView.dataSource = self
         tableView.delegate = self
         
@@ -124,6 +125,7 @@ final class StatisticsViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
+        navigationController?.navigationBar.tintColor = .ypWhite
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: sortButton)
     }
     
@@ -249,8 +251,6 @@ extension StatisticsViewController: UITableViewDelegate {
         
         let user = viewModel.users[indexPath.row]
         let profile = user.toProfile()
-        
-        let assembly = StatisticsAssembly()
         
         let detailViewModel = self.assembly.makeProfileDetailViewModel(
             profile: profile,

@@ -51,6 +51,7 @@ final class ProfileDetailViewController: UIViewController {
         button.addTarget(self, action: #selector(websiteButtonTapped), for: .touchUpInside)
         button.layer.cornerRadius = 15
         button.layer.borderWidth = 1.5
+        button.layer.borderColor = UIColor.ypBlack.cgColor
         button.translatesAutoresizingMaskIntoConstraints = false
         
         return button
@@ -121,7 +122,7 @@ final class ProfileDetailViewController: UIViewController {
         
         let backImage = UIImage(systemName: "chevron.left")?
             .withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
-            .withTintColor(.black, renderingMode: .alwaysOriginal)
+            .withTintColor(.ypBlack, renderingMode: .alwaysOriginal)
 
         navigationController?.navigationBar.backIndicatorImage = backImage
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = backImage
