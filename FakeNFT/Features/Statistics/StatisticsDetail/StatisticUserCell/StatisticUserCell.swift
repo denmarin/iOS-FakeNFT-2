@@ -126,12 +126,18 @@ class StatisticUserCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(with user: StatisticUser, rank: Int) {
-        ratingLabel.text = "\(rank)"
+    func configure(with user: UserListResponse) {
+        ratingLabel.text = "\(String(describing: user.rating))"
         nameLabel.text = "\(user.name)"
-        scoreLabel.text = "\(user.score)"
         
-        loadAvatar(with: user.avatarUrl)
+        let nftsCount = user.nfts?.count ?? 0
+        scoreLabel.text = "\(nftsCount)"
+        
+        if let avatarString = user.avatar, let url = URL(string: avatarString) {
+            avatarImageView.kf.setImage(with: url)
+        } else {
+            avatarImageView.image = UIImage.profileTabBar 
+        }
     }
     
     private func loadAvatar(with url: URL?) {

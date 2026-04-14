@@ -11,6 +11,7 @@ import Combine
 final class StatisticsViewController: UIViewController {
     
     private let viewModel: StatisticsViewModel
+    private let assembly: StatisticsAssembly
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - UI Elements
@@ -54,10 +55,22 @@ final class StatisticsViewController: UIViewController {
             label.isHidden = true
             label.translatesAutoresizingMaskIntoConstraints = false
             return label
-        }()
+    }()
+    
+    private lazy var sortButton: UIButton = {
+        let sortButton = UIButton()
+        sortButton.setImage(.sort, for: .normal)
+        sortButton.tintColor = .ypBlack
+        sortButton.addTarget(self, action: #selector(sortButtonTapped), for: .touchUpInside)
+        sortButton.translatesAutoresizingMaskIntoConstraints = false
+        sortButton.widthAnchor.constraint(equalToConstant: 42).isActive = true
+        sortButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
+        return sortButton
+    }()
 
-    init(viewModel: StatisticsViewModel) {
+    init(viewModel: StatisticsViewModel, assembly: StatisticsAssembly) {
         self.viewModel = viewModel
+        self.assembly = assembly
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -72,8 +85,11 @@ final class StatisticsViewController: UIViewController {
         tableView.delegate = self
         
         setupConstraints()
-        
         bindViewModel()
+        
+        viewModel.onErrorShowAlert = { [weak self] in
+            self?.showErrorAlert()
+        }
         
         Task {
             await viewModel.loadUsers()
@@ -108,19 +124,49 @@ final class StatisticsViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        let sortButton = UIButton()
-        sortButton.setImage(.sort, for: .normal)
-        sortButton.tintColor = .ypBlack
-        sortButton.addTarget(self, action: #selector(sortButtonTapped), for: .touchUpInside)
-        sortButton.translatesAutoresizingMaskIntoConstraints = false
-        sortButton.widthAnchor.constraint(equalToConstant: 42).isActive = true
-        sortButton.heightAnchor.constraint(equalToConstant: 42).isActive = true
-        
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: sortButton)
     }
     
     @objc private func sortButtonTapped() {
+        let alert = UIAlertController(title: "Сортировка", message: nil, preferredStyle: .actionSheet)
         
+        let byRating = UIAlertAction(title: "По рейтингу", style: .default) { [weak self] _ in
+            self?.viewModel.sortUsers(by: .byRating)
+        }
+  
+        let byName = UIAlertAction(title: "По имени", style: .default) { [weak self] _ in
+            self?.viewModel.sortUsers(by: .byName)
+        }
+        let cancelButton = UIAlertAction(title: "Закрыть", style: .cancel, handler: nil)
+        
+        alert.addAction(byRating)
+        alert.addAction(byName)
+        alert.addAction(cancelButton)
+
+        present(alert, animated: true)
+        
+    }
+    
+    private func showErrorAlert() {
+        let alert = UIAlertController(
+            title: "Не удалось получить данные",
+            message: nil,
+            preferredStyle: .alert
+        )
+        
+        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel, handler: nil)
+        
+        let retryAction = UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+            
+            Task {
+                await self?.viewModel.loadUsers()
+            }
+        }
+        
+        alert.addAction(cancelAction)
+        alert.addAction(retryAction)
+        
+        present(alert, animated: true, completion: nil)
     }
 
     private func bindViewModel() {
@@ -140,6 +186,7 @@ final class StatisticsViewController: UIViewController {
     }
     
     private func updateUI(for state: State) {
+        print("🔄 UI State: \(state)")
         switch state {
         case .loading:
             loadingIndicator.startAnimating()
@@ -185,7 +232,7 @@ extension StatisticsViewController: UITableViewDataSource {
         
         let user = viewModel.users[indexPath.row]
         
-        cell.configure(with: user, rank: indexPath.row + 1)
+        cell.configure(with: user)
         
         return cell
     }
@@ -199,36 +246,20 @@ extension StatisticsViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        
         let user = viewModel.users[indexPath.row]
+        let profile = user.toProfile()
         
-//        let profile = Profile(
-//            id: user.id,
-//            name: user.name,
-//            avatar: user.avatarUrl,
-//            description: nil,
-//            website: nil,
-//            nftIDs: [],
-//            likedNftIDs: []
-//        )
+        let assembly = StatisticsAssembly()
         
-        // В StatisticsViewController, в didSelectRowAt
-        let profile = Profile(
-            id: user.id,
-            name: user.name,
-            avatar: user.avatarUrl,
-            description: "Тестовое описание пользователя",
-            website: URL(string: "https://example.com"),
-            nftIDs: ["1", "2", "3", "4", "5"],  // ← добавим тестовые ID
-            likedNftIDs: []
+        let detailViewModel = self.assembly.makeProfileDetailViewModel(
+            profile: profile,
+            currentUserId: RequestConstants.token
         )
-        
-        let detailViewModel = ProfileDetailViewModel(profile: profile)
-        
-        let nftService = MockStatisticsNftService()
         
         let detailViewController = ProfileDetailViewController(
             viewModel: detailViewModel,
-            nftService: nftService
+            assembly: self.assembly
         )
         
         navigationController?.pushViewController(detailViewController, animated: true)

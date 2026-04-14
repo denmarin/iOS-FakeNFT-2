@@ -13,13 +13,14 @@ final class NftCollectionViewController: UIViewController {
     private let viewModel: NftCollectionViewModelProtocol
     private var cancellables = Set<AnyCancellable>()
     
+    private var hasShownErrorAlert = false
+    
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
         collectionView.backgroundColor = .white
         collectionView.showsVerticalScrollIndicator = false
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Регистрируем ячейку
+
         collectionView.register(
             NftCollectionCell.self,
             forCellWithReuseIdentifier: NftCollectionCell.reuseIdentifier
@@ -75,8 +76,7 @@ final class NftCollectionViewController: UIViewController {
         setupCollectionViewLayout()
         setupConstraints()
         bindViewModel()
-        
-        // Загружаем данные
+ 
         Task {
             await viewModel.loadNfts()
         }
@@ -85,24 +85,19 @@ final class NftCollectionViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .white
         title = "Коллекция NFT"
-        
-        // Настраиваем чёрную стрелку назад (как на предыдущем экране)
+
         navigationController?.navigationBar.tintColor = .black
         navigationItem.backButtonTitle = ""
     }
     
     private func setupCollectionViewLayout() {
-            // Создаём layout
             let layout = UICollectionViewFlowLayout()
             layout.scrollDirection = .vertical
-            
-            // Расстояние между строками (вертикальное)
+
             layout.minimumLineSpacing = 16
-            
-            // Расстояние между ячейками в строке (горизонтальное)
+
             layout.minimumInteritemSpacing = 9
-            
-            // Отступы секции (слева, снизу, справа, сверху)
+
             let horizontalInsets: CGFloat = 16
             layout.sectionInset = UIEdgeInsets(
                 top: 0,
@@ -110,8 +105,7 @@ final class NftCollectionViewController: UIViewController {
                 bottom: 0,
                 right: horizontalInsets
             )
-            
-            // Рассчитываем ширину ячейки для 3 колонок
+
             let screenWidth = UIScreen.main.bounds.width
             let columnsCount: CGFloat = 3
             let interitemSpacing = layout.minimumInteritemSpacing
@@ -119,11 +113,10 @@ final class NftCollectionViewController: UIViewController {
             let totalHorizontalInsets = horizontalInsets * 2
             
             let itemWidth = (screenWidth - totalHorizontalInsets - totalInteritemSpacing) / columnsCount
-            let itemHeight = itemWidth + 50  // высота: ширина + место для текста и рейтинга
+            let itemHeight = itemWidth + 50
             
             layout.itemSize = CGSize(width: itemWidth, height: itemHeight)
-            
-            // Применяем layout к collectionView
+
             collectionView.collectionViewLayout = layout
         }
     
@@ -152,16 +145,45 @@ final class NftCollectionViewController: UIViewController {
         ])
     }
     
+    private func showErrorAlert() {
+        let alert = UIAlertController(
+            title: "Не удалось получить данные",
+            message: nil,
+            preferredStyle: .alert
+        )
+        
+        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel, handler: nil)
+        
+        let retryAction = UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+            self?.hasShownErrorAlert = false
+            
+            Task {
+                await self?.viewModel.loadNfts()
+            }
+        }
+        
+        alert.addAction(cancelAction)
+        alert.addAction(retryAction)
+        
+        present(alert, animated: true, completion: nil)
+    }
+    
     private func bindViewModel() {
-        // Подписываемся на изменения состояния через statePublisher
         viewModel.statePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 self?.updateUI(for: state)
+                if case .error = state {
+                    if self?.hasShownErrorAlert == false {
+                        self?.hasShownErrorAlert = true
+                        self?.showErrorAlert()
+                    }
+                } else {
+                    self?.hasShownErrorAlert = false
+                }
             }
             .store(in: &cancellables)
-        
-        // Подписываемся на изменения массива NFT через nftsPublisher
+
         viewModel.nftsPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -216,7 +238,22 @@ extension NftCollectionViewController: UICollectionViewDataSource {
         }
         
         let nft = viewModel.nfts[indexPath.row]
-        cell.configure(with: nft)
+        
+        let isLiked = viewModel.isLiked(nftId: nft.id)
+        let isInCart = viewModel.isInCart(nftId: nft.id)
+        
+        cell.configure(with: nft, isLiked: isLiked, isInCart: isInCart)
+        
+        cell.onLikeTap = { [weak self] nftId in
+            Task {
+                await self?.viewModel.toggleLike(for: nftId)
+            }
+        }
+        cell.onCartTap = { [weak self] nftId in
+            Task {
+                await self?.viewModel.toggleCart(for: nftId)
+            }
+        }
         
         return cell
     }
@@ -229,6 +266,5 @@ extension NftCollectionViewController: UICollectionViewDelegate {
         collectionView.deselectItem(at: indexPath, animated: true)
         let nft = viewModel.nfts[indexPath.row]
         print("Нажат NFT: \(nft.name)")
-        // TODO: Переход на детальный экран NFT (если нужен)
     }
 }

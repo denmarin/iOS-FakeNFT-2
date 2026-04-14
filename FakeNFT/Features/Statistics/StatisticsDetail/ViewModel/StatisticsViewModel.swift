@@ -11,10 +11,12 @@ import Combine
 @MainActor
 protocol StatisticsViewModelProtocol {
     var state: State { get }
-    var users: [StatisticUser] { get }
+    var users: [UserListResponse] { get }
     
     func loadUsers() async
     func refreshUsers() async
+    func sortUsers(by type: SortType)
+    
 }
 
 enum State {
@@ -24,86 +26,64 @@ enum State {
     case empty
 }
 
-enum SortType {
-    case byRating
-    case byName
-}
-
 final class StatisticsViewModel: StatisticsViewModelProtocol {
-
+    
     @Published private(set) var state: State = .loading
     
-    @Published private(set) var users: [StatisticUser] = []
+    @Published private(set) var users: [UserListResponse] = []
     
     private(set) var currentSortType: SortType = .byRating
+    
+    private let service: StatisticsServiceProtocol
+    
+    var onErrorShowAlert: (() -> Void)?
+    
+    init(service: StatisticsServiceProtocol) {
+        self.service = service
+    }
     
     func loadUsers() async {
         state = .loading
         
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-        
-        let mockUsers = [
-                    StatisticUser(
-                        id: "1",
-                        name: "Alex",
-                        rating: 1,
-                        score: 112,
-                        avatarUrl: URL(string: "https://example.com/alex.jpg")
-                    ),
-                    StatisticUser(
-                        id: "2",
-                        name: "Bill",
-                        rating: 2,
-                        score: 98,
-                        avatarUrl: URL(string: "https://example.com/bill.jpg")
-                    ),
-                    StatisticUser(
-                        id: "3",
-                        name: "Alla",
-                        rating: 3,
-                        score: 72,
-                        avatarUrl: URL(string: "https://example.com/alla.jpg")
-                    ),
-                    StatisticUser(
-                        id: "4",
-                        name: "Mads",
-                        rating: 4,
-                        score: 71,
-                        avatarUrl: URL(string: "https://example.com/mads.jpg")
-                    ),
-                    StatisticUser(
-                        id: "5",
-                        name: "Timothée",
-                        rating: 5,
-                        score: 51,
-                        avatarUrl: URL(string: "https://example.com/timothee.jpg")
-                    ),
-                    StatisticUser(
-                        id: "6",
-                        name: "Lea",
-                        rating: 6,
-                        score: 23,
-                        avatarUrl: URL(string: "https://example.com/lea.jpg")
-                    ),
-                    StatisticUser(
-                        id: "7",
-                        name: "Eric",
-                        rating: 7,
-                        score: 11,
-                        avatarUrl: URL(string: "https://example.com/eric.jpg")
-                    )
-                ]
-        
-        self.users = mockUsers
-        
-        self.state = .content
+        do {
+            let loadedUsers = try await service.loadUsers()
+            print("✅ Успешно распарсили \(loadedUsers.count) пользователей")
+            
+            self.users = loadedUsers
+            sortUsers(by: .byRating
+            )
+            self.state = self.users.isEmpty ? .empty : .content
+        } catch {
+            print("❌ Ошибка сети или парсинга: \(error)")
+            self.state = .error("Ошибка загрузки")
+            onErrorShowAlert?()
+        }
     }
     
     func refreshUsers() async {
         await loadUsers()
     }
     
-    func sotrUser(by type: SortType) {
-        // реализация следующем спринте.
+    func sortUsers(by type: SortType) {
+        guard self.currentSortType != type else { return } 
+        self.currentSortType = type
+        applySorting()
+    }
+    
+    private func applySorting() {
+        switch currentSortType {
+        case .byRating:
+            self.users = self.users.sorted { user1, user2 in
+                let rating1 = Int(user1.rating) ?? 0
+                let rating2 = Int(user2.rating) ?? 0
+
+                return rating1 > rating2
+            }
+            
+        case .byName:
+            self.users = self.users.sorted { user1, user2 in
+                return (user1.name).localizedCaseInsensitiveCompare(user2.name) == .orderedAscending
+            }
+        }
     }
 }

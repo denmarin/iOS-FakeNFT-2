@@ -12,6 +12,10 @@ final class NftCollectionCell: UICollectionViewCell {
     
     static let reuseIdentifier = "NftCollectionCell"
     
+    var onLikeTap: ((String) -> Void)?
+    var onCartTap: ((String) -> Void)?
+    private var currentNftId: String?
+    
     private lazy var viewStack: UIView = {
         let stack = UIView()
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -140,7 +144,8 @@ final class NftCollectionCell: UICollectionViewCell {
         ])
     }
     
-    func configure(with nft: Nft) {
+    func configure(with nft: Nft, isLiked: Bool, isInCart: Bool) {
+        currentNftId = nft.id
         nameLabel.text = nft.name
         priceLabel.text = "\(nft.price) ETH"
         
@@ -155,6 +160,22 @@ final class NftCollectionCell: UICollectionViewCell {
         } else {
             imageView.image = UIImage(systemName: "photo")
         }
+        
+        if isLiked {
+            likeButton.setImage(UIImage.favoriteImageOn, for: .normal)
+        } else {
+            likeButton.setImage(.favoriteImageOff, for: .normal)
+            likeButton.tintColor = .gray
+        }
+        if isInCart {
+            cartButton.setImage(UIImage.cartTabBar, for: .normal) 
+            cartButton.tintColor = .systemBlue
+        } else {
+            cartButton.setImage(UIImage.cartImageAdd, for: .normal)
+            cartButton.tintColor = .ypBlack
+        }
+        
+        currentNftId = nft.id
     }
     
     private func setupRating(rating: Int) {
@@ -179,12 +200,14 @@ final class NftCollectionCell: UICollectionViewCell {
     
     @objc private func likeButtonTapped() {
         print("Нажата кнопка лайка")
-        // TODO: Логика добавления/удаления из избранного
+        guard let id = currentNftId else { return }
+        onLikeTap?(id)
     }
     
     @objc private func cartButtonTapped() {
         print("Нажата кнопка корзины")
-        // TODO: Логика добавления в корзину
+        guard let id = currentNftId else { return }
+        onCartTap?(id)
     }
     
     override func prepareForReuse() {
@@ -195,6 +218,10 @@ final class NftCollectionCell: UICollectionViewCell {
         imageView.kf.cancelDownloadTask()
         
         ratingView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        currentNftId = nil
+        onLikeTap = nil
+        onCartTap = nil
     }
     
 }
