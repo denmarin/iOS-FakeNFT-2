@@ -29,7 +29,6 @@ final class FavoriteNFTCollectionViewCell: UICollectionViewCell, ReuseIdentifyin
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .bodyBold
         label.textColor = .ypBlack
-        label.numberOfLines = 1
         return label
     }()
     
@@ -38,7 +37,6 @@ final class FavoriteNFTCollectionViewCell: UICollectionViewCell, ReuseIdentifyin
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = .caption1
         label.textColor = .ypBlack
-        label.numberOfLines = 1
         return label
     }()
     

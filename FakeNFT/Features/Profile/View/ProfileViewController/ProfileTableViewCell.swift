@@ -11,6 +11,8 @@ final class ProfileTableViewCell: UITableViewCell, ReuseIdentifying{
     }
     
     private func setupUI(){
+        backgroundColor = .ypWhite
+        contentView.backgroundColor = .clear
         textLabel?.font = .bodyBold
         textLabel?.textColor = .ypBlack
         selectionStyle = .none
@@ -22,6 +24,7 @@ final class ProfileTableViewCell: UITableViewCell, ReuseIdentifying{
         let configuration = UIImage.SymbolConfiguration(weight: .semibold)
         chevronImageView.preferredSymbolConfiguration = configuration
         
+        chevronImageView.backgroundColor = .clear
         accessoryView = chevronImageView
     }
     

@@ -51,9 +51,9 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
     private let saveButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitleColor(.ypWhite, for: .normal)
         button.backgroundColor = .ypBlack
-        button.tintColor = .ypWhite
-        button.setTitle("Сохранить", for: .normal)
+        button.setTitle(String(localized: "EditProfile.saveButton.title", defaultValue: "Сохранить"), for: .normal)
         button.layer.cornerRadius = 16
         button.clipsToBounds = true
         button.isHidden = true
@@ -80,15 +80,13 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
         fatalError("init(coder:) has not been implemented")
     }
     
-    private let nameFields = EditProfileFiledWithTextField(title: "Имя", text: "")
-    private let descriptionFields = EditProfileFiledWithTextView(title: "Описание", text: "")
-    private let siteFields = EditProfileFiledWithTextField(title: "Сайт", text: "")
+    private let nameFields = EditProfileFiledWithTextField(title: String(localized: "EditProfile.name", defaultValue: "Имя"), text: "")
+    private let descriptionFields = EditProfileFiledWithTextView(title: String(localized: "EditProfile.description", defaultValue: "Описание"), text: "")
+    private let siteFields = EditProfileFiledWithTextField(title: String(localized: "EditProfile.site", defaultValue: "Сайт"), text: "")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
-        let backNavBarButton = UIBarButtonItem(image: UIImage(resource: .backButton), style: .plain, target: self, action: #selector(dismissViewController))
-        self.navigationItem.leftBarButtonItem = backNavBarButton
         setupPhotoView()
         setupScrollViewAndContentView()
         setupBindings()
@@ -148,7 +146,7 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
                     self?.saveButton.isEnabled = true
                     let errorModel = ErrorModel(
                         message: message,
-                        actionText: "Повторить"
+                        actionText: String(localized: "Error.repeat")
                     ) { [weak self] in
                         self?.viewModel.didTapSave()
                     }
@@ -196,6 +194,9 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
     }
     
     private func setupUI(){
+        let backNavBarButton = UIBarButtonItem(image: UIImage(resource: .backButton), style: .plain, target: self, action: #selector(dismissViewController))
+        self.navigationItem.leftBarButtonItem = backNavBarButton
+        
         contentView.addSubview(profilePhotoView)
         contentView.addSubview(saveButton)
         
@@ -257,12 +258,12 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
     
     @objc private func dismissViewController(){
         if viewModel.isChanged{
-            let alert = UIAlertController(title: "Уверены, что хотите выйти?", message: nil, preferredStyle: .alert)
-            let exitAction = UIAlertAction(title: "Выйти", style: .default){ [weak self] _ in
+            let alert = UIAlertController(title: String(localized: "EditProfile.exitAlert.title", defaultValue: "Уверены, что хотите выйти?" ), message: nil, preferredStyle: .alert)
+            let exitAction = UIAlertAction(title: String(localized: "EditProfile.exitAlert.exit", defaultValue: "Выйти"), style: .default){ [weak self] _ in
                 guard let self else { return }
                 self.dismiss(animated: true)
             }
-            let cancelAction = UIAlertAction(title: "Остаться", style: .cancel)
+            let cancelAction = UIAlertAction(title: String(localized: "EditProfile.exitAlert.stay", defaultValue: "Остаться"), style: .cancel)
             alert.addAction(exitAction)
             alert.addAction(cancelAction)
             present(alert, animated: true)
@@ -276,17 +277,17 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
     }
     
     @objc private func photoDidTap() {
-        let actionSheet = UIAlertController(title: "Фото профиля", message: nil, preferredStyle: .actionSheet)
+        let actionSheet = UIAlertController(title: String(localized: "EditProfile.photoAlert.title", defaultValue: "Фото профиля"), message: nil, preferredStyle: .actionSheet)
         
-        let editAction = UIAlertAction(title: "Изменить фото", style: .default) { [weak self] _ in
+        let editAction = UIAlertAction(title: String(localized: "EditProfile.photoAlert.changePhoto", defaultValue: "Изменить фото"), style: .default) { [weak self] _ in
             self?.showUrlAlert()
         }
         
-        let deleteAction = UIAlertAction(title: "Удалить фото", style: .destructive) { [weak self] _ in
+        let deleteAction = UIAlertAction(title: String(localized: "EditProfile.photoAlert.deletePhoto", defaultValue: "Удалить фото"), style: .destructive) { [weak self] _ in
             self?.viewModel.removeAvatar()
         }
         
-        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel)
+        let cancelAction = UIAlertAction(title: String(localized: "EditProfile.photoAlert.cancel", defaultValue: "Отмена"), style: .cancel)
         
         actionSheet.addAction(editAction)
         actionSheet.addAction(deleteAction)
@@ -296,20 +297,20 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
     }
     
     private func showUrlAlert() {
-        let alert = UIAlertController(title: "Ссылка на фото", message: nil, preferredStyle: .alert)
+        let alert = UIAlertController(title: String(localized: "EditProfile.changePhotoAlert.title", defaultValue: "Ссылка на фото"), message: nil, preferredStyle: .alert)
         
         alert.addTextField { textField in
-            textField.placeholder = "Введите название URL изображения"
+            textField.placeholder = String(localized: "EditProfile.changePhotoAlert.textFieldPlaceholder", defaultValue: "Введите название URL изображения")
         }
         
-        let okAction = UIAlertAction(title: "ОК", style: .default) { [weak self] _ in
+        let okAction = UIAlertAction(title: String(localized: "EditProfile.changePhotoAlert.save", defaultValue: "Сохранить"), style: .default) { [weak self] _ in
             if let text = alert.textFields?.first?.text, !text.isEmpty {
                 guard let url = URL(string: text) else { return }
                 self?.viewModel.updateAvatar(with: url)
             }
         }
         
-        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel)
+        let cancelAction = UIAlertAction(title: String(localized: "EditProfile.changePhotoAlert.cancel", defaultValue: "Отмена"), style: .cancel)
         
         alert.addAction(okAction)
         alert.addAction(cancelAction)

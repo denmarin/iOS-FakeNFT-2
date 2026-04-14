@@ -69,7 +69,7 @@ final class EditProfileViewModel{
             } catch let error as NetworkClientError {
                 state = .error(error.description)
             } catch {
-                state = .error("Произошла непредвиденная ошибка")
+                state = .error(String(localized: "Error.unknown"))
             }
             
         }

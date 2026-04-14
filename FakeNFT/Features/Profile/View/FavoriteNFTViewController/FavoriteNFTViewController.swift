@@ -6,6 +6,7 @@ final class FavoriteNFTViewController: UIViewController, LoadingView, ErrorView{
     
     private lazy var favoriteNFTCollectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: createLayout())
+        collectionView.backgroundColor = .ypWhite
         
         collectionView.allowsSelection = false
         
@@ -23,7 +24,7 @@ final class FavoriteNFTViewController: UIViewController, LoadingView, ErrorView{
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .ypBlack
         label.font = .bodyBold
-        label.text = "У Вас ещё нет избрианных NFT"
+        label.text = String(localized: "FavoriteNFT.noNFTLabel.text", defaultValue: "У Вас ещё нет избрианных NFT")
         return label
     }()
     
@@ -81,7 +82,7 @@ final class FavoriteNFTViewController: UIViewController, LoadingView, ErrorView{
             hideLoading()
             let errorModel = ErrorModel(
                 message: message,
-                actionText: "Повторить"
+                actionText: String(localized: "Error.repeat")
             ) { [weak self] in
                 Task{
                     await self?.viewModel.loadData()
@@ -112,7 +113,7 @@ final class FavoriteNFTViewController: UIViewController, LoadingView, ErrorView{
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         
-        self.title = "Избранные NFT"
+        self.title = String(localized: "FavoriteNFT.navigationBar.text", defaultValue: "Избранные NFT")
         
         let backNavBarButton = UIBarButtonItem(image: UIImage(resource: .backButton), style: .plain, target: self, action: #selector(dismissViewController))
         self.navigationItem.leftBarButtonItem = backNavBarButton

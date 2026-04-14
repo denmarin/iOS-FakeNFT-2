@@ -6,6 +6,7 @@ final class WebViewController: UIViewController {
     
     private lazy var webView: WKWebView = {
         let webView = WKWebView()
+        webView.backgroundColor = .ypWhite
         webView.translatesAutoresizingMaskIntoConstraints = false
         return webView
     }()
@@ -39,9 +40,15 @@ final class WebViewController: UIViewController {
     }
     
     private func setupUI() {
+        view.backgroundColor = .ypWhite
         view.addSubview(webView)
-        
-        webView.constraintEdgesSafeArea(to: view)
+    
+        NSLayoutConstraint.activate([
+            webView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
     }
     
     private func loadWebView() {
@@ -50,6 +57,6 @@ final class WebViewController: UIViewController {
     }
     
     @objc private func didTapBackButton() {
-        navigationController?.popViewController(animated: true)
+        dismiss(animated: true)
     }
 }

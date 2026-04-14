@@ -8,8 +8,10 @@ enum ProfileRow: Int, CaseIterable {
     
     var title: String {
         switch self {
-        case .myNfts: return "Мои NFT"
-        case .favorites: return "Избранные NFT"
+        case .myNfts:
+            return String(localized: "Profile.tabel.myNfts", defaultValue: "Мои NFT")
+        case .favorites:
+            return String(localized: "Profile.table.favorites", defaultValue: "Избранные NFT")
         }
     }
 }
@@ -65,6 +67,7 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
         table.rowHeight = 54
         table.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         table.preservesSuperviewLayoutMargins = true
+        table.backgroundColor = .ypWhite
         table.register(ProfileTableViewCell.self)
         table.separatorStyle = .none
         table.allowsSelection = true
@@ -197,7 +200,7 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
             hideLoading()
             let errorModel = ErrorModel(
                 message: message,
-                actionText: "Повторить"
+                actionText: String(localized: "Error.repeat")
             ) { [weak self] in
                 self?.viewModel.onAppear()
             }
@@ -260,7 +263,9 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
         case .webView:
             let webViewViewModel = WebViewViewModel()
             let webVC = WebViewController(viewModel: webViewViewModel)
-            navigationController?.pushViewController(webVC, animated: true)
+            let navvc = UINavigationController(rootViewController: webVC)
+            navvc.modalPresentationStyle = .fullScreen
+            present(navvc,animated: true)
         }
     }
     

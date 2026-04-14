@@ -18,7 +18,7 @@ final class MyNFTViewController: UIViewController, LoadingView, ErrorView{
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .ypBlack
         label.font = .bodyBold
-        label.text = "У Вас ещё нет NFT"
+        label.text = String(localized: "MyNFT.noNFTLabel.text", defaultValue: "У Вас ещё нет NFT")
         return label
     }()
     
@@ -76,7 +76,7 @@ final class MyNFTViewController: UIViewController, LoadingView, ErrorView{
             hideLoading()
             let errorModel = ErrorModel(
                 message: message,
-                actionText: "Повторить"
+                actionText: String(localized: "Error.repeat")
             ) { [weak self] in
                 Task{
                     await self?.viewModel.loadData()
@@ -126,7 +126,7 @@ final class MyNFTViewController: UIViewController, LoadingView, ErrorView{
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         
-        self.title = "Мои NFT"
+        self.title = String(localized: "MyNFT.navigationBar.text", defaultValue: "Мои NFT")
         
         let sortNavBarButton = UIBarButtonItem(image: UIImage(resource: .sort), style: .plain, target: self, action: #selector(didTapSortButton))
         self.navigationItem.rightBarButtonItem = sortNavBarButton
@@ -139,18 +139,18 @@ final class MyNFTViewController: UIViewController, LoadingView, ErrorView{
     }
     
     @objc private func didTapSortButton(){
-        let actionSheet = UIAlertController(title: "Сортировка", message: nil, preferredStyle: .actionSheet)
+        let actionSheet = UIAlertController(title: String(localized: "MyNFT.sortAlert.title", defaultValue: "Сортировка"), message: nil, preferredStyle: .actionSheet)
         
-        actionSheet.addAction(UIAlertAction(title: "По цене", style: .default) { [weak self] _ in
+        actionSheet.addAction(UIAlertAction(title: String(localized: "MyNFT.sortAlert.byPrice", defaultValue: "По цене"), style: .default) { [weak self] _ in
             self?.viewModel.sort(by: .price)
         })
-        actionSheet.addAction(UIAlertAction(title: "По рейтингу", style: .default) { [weak self] _ in
+        actionSheet.addAction(UIAlertAction(title: String(localized: "MyNFT.sortAlert.byRating", defaultValue: "По рейтингу"), style: .default) { [weak self] _ in
             self?.viewModel.sort(by: .rating)
         })
-        actionSheet.addAction(UIAlertAction(title: "По названию", style: .default) { [weak self] _ in
+        actionSheet.addAction(UIAlertAction(title: String(localized: "MyNFT.sortAlert.byName", defaultValue: "По названию"), style: .default) { [weak self] _ in
             self?.viewModel.sort(by: .name)
         })
-        let cancelAction = UIAlertAction(title: "Закрыть", style: .cancel)
+        let cancelAction = UIAlertAction(title: String(localized: "MyNFT.sortAlert.close", defaultValue: "Закрыть"), style: .cancel)
         
         actionSheet.addAction(cancelAction)
         
