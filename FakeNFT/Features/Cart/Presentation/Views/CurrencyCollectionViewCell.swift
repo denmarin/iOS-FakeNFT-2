@@ -72,7 +72,7 @@ final class CurrencyCollectionViewCell: UICollectionViewCell {
     
     func configure(with currency: Currency) {
         titleLabel.text = currency.title
-        codeLabel.text = currency.name
+        codeLabel.text = currency.shortName
         iconImageView.kf.setImage(with: URL(string: currency.image))
     }
     
