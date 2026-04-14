@@ -19,14 +19,14 @@ final class AppTabBarController: UITabBarController {
     }
 
     private func setupTabs() {
-        let catalogController = TestCatalogViewController(servicesAssembly: servicesAssembly)
+        let catalogController = CatalogAssembly(servicesAssembly: servicesAssembly).build()
 
-        let cartController = UIViewController()
-        
         let profileService = ProfileServiceImp()
         let profileViewModel = ProfileViewModelImpl(provider: profileService)
         let profileController = ProfileViewController(viewModel: profileViewModel)
         
+        let cartViewModel = CartViewModel()
+        let cartController = CartViewController(viewModel: cartViewModel)
         let statsController = UIViewController()
 
         let catalogNavigation = UINavigationController(rootViewController: catalogController)
@@ -55,7 +55,7 @@ final class AppTabBarController: UITabBarController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = title
-        label.font = .systemFont(ofSize: 22, weight: .semibold)
+        label.font = .headline3
         label.textColor = .secondaryLabel
         viewController.view.addSubview(label)
 
