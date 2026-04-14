@@ -7,6 +7,21 @@ enum NetworkClientError: Error {
     case parsingError
 }
 
+extension NetworkClientError {
+    var description: String {
+        switch self {
+        case .httpStatusCode(let code):
+            return "Ошибка сервера (\(code)). Попробуйте позже."
+        case .urlRequestError:
+            return "Ошибка создания запроса."
+        case .urlSessionError:
+            return "Проблема с интернет-соединением."
+        case .parsingError:
+            return "Ошибка обработки данных от сервера."
+        }
+    }
+}
+
 protocol NetworkClient {
     @discardableResult
     func send(request: NetworkRequest,

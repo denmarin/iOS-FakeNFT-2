@@ -21,9 +21,12 @@ final class AppTabBarController: UITabBarController {
     private func setupTabs() {
         let catalogController = CatalogAssembly(servicesAssembly: servicesAssembly).build()
 
+        let profileService = ProfileServiceImp()
+        let profileViewModel = ProfileViewModelImpl(provider: profileService)
+        let profileController = ProfileViewController(viewModel: profileViewModel)
+        
         let cartViewModel = CartViewModel()
         let cartController = CartViewController(viewModel: cartViewModel)
-        let profileController = UIViewController()
         let statsController = UIViewController()
 
         let catalogNavigation = UINavigationController(rootViewController: catalogController)
