@@ -26,7 +26,7 @@ final class CartViewController: UIViewController, ErrorView {
     private lazy var  emptyCartLabel: UILabel = {
         let label = UILabel()
         label.text = String(localized: "cart.main.emptyState", defaultValue: "Корзина пуста")
-        label.font = .systemFont(ofSize: 17, weight: .bold)
+        label.font = .bodyBold
         label.textColor = UIColor(resource: .ypBlack)
         label.textAlignment = .center
         label.isHidden = true

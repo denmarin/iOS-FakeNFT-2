@@ -29,7 +29,7 @@ final class PaymentMethodViewController: UIViewController {
         button.backgroundColor = .ypBlack
         button.setTitle(String(localized: "cart.payment.pay", defaultValue: "Оплатить"), for: .normal)
         button.setTitleColor(.ypWhite, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+        button.titleLabel?.font = .bodyBold
         button.layer.cornerRadius = 16
         button.addTarget(self, action: #selector(didTapPay), for: .touchUpInside)
         return button
@@ -105,7 +105,7 @@ final class PaymentMethodViewController: UIViewController {
         
         let range = (fullText as NSString).range(of: linkText)
         attributedString.addAttribute(.link, value: "https://yandex.ru/legal/practicum_termsofuse", range: range)
-        attributedString.addAttribute(.font, value: UIFont.systemFont(ofSize: 13), range: NSRange(location: 0, length: fullText.count))
+        attributedString.addAttribute(.font, value: UIFont.caption2, range: NSRange(location: 0, length: fullText.count))
         
         termsTextView.attributedText = attributedString
     }

@@ -14,14 +14,14 @@ final class CartBottomView: UIView {
     
     private lazy var countLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 15, weight: .regular)
+        label.font = .caption1
         label.textColor = .ypBlack
         return label
     }()
     
     private lazy var priceLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .bold)
+        label.font = .bodyBold
         label.textColor = .greenUniversal
         return label
     }()
@@ -31,7 +31,7 @@ final class CartBottomView: UIView {
         button.backgroundColor = .ypBlack
         button.setTitle(String(localized: "cart.bottom.checkout", defaultValue: "К оплате"), for: .normal)
         button.setTitleColor(.ypWhite, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+        button.titleLabel?.font = .bodyBold
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(didTapCheckout), for: .touchUpInside)

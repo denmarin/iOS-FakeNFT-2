@@ -15,14 +15,14 @@ final class CurrencyCollectionViewCell: UICollectionViewCell {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 13, weight: .regular)
+        label.font = .caption2
         label.textColor = .ypBlack
         return label
     }()
     
     private let codeLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 13, weight: .regular)
+        label.font = .caption2
         label.textColor = .greenUniversal
         return label
     }()
