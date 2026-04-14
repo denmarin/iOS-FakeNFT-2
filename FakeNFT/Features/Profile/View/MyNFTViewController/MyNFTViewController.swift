@@ -130,7 +130,7 @@ final class MyNFTViewController: UIViewController, LoadingView, ErrorView{
         
         let sortNavBarButton = UIBarButtonItem(image: UIImage(resource: .sort), style: .plain, target: self, action: #selector(didTapSortButton))
         self.navigationItem.rightBarButtonItem = sortNavBarButton
-        let backNavBarButton = UIBarButtonItem(image: UIImage(resource: .backButton), style: .plain, target: self, action: #selector(dismissViewController))
+        let backNavBarButton = UIBarButtonItem(image: UIImage(resource: .backButtonDark), style: .plain, target: self, action: #selector(dismissViewController))
         self.navigationItem.leftBarButtonItem = backNavBarButton
     }
     

@@ -115,7 +115,7 @@ final class FavoriteNFTViewController: UIViewController, LoadingView, ErrorView{
         
         self.title = String(localized: "FavoriteNFT.navigationBar.text", defaultValue: "Избранные NFT")
         
-        let backNavBarButton = UIBarButtonItem(image: UIImage(resource: .backButton), style: .plain, target: self, action: #selector(dismissViewController))
+        let backNavBarButton = UIBarButtonItem(image: UIImage(resource: .backButtonDark), style: .plain, target: self, action: #selector(dismissViewController))
         self.navigationItem.leftBarButtonItem = backNavBarButton
     }
     

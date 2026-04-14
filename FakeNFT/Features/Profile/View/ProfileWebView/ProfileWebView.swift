@@ -30,7 +30,7 @@ final class WebViewController: UIViewController {
     
     private func setupNavigationBar() {
         let backButton = UIBarButtonItem(
-            image: UIImage(resource: .backButton),
+            image: UIImage(resource: .backButtonDark),
             style: .plain,
             target: self,
             action: #selector(didTapBackButton)
