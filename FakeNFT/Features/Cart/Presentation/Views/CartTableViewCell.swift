@@ -52,9 +52,9 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     private lazy var priceTitleLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .systemFont(ofSize: 13, weight: .regular)
+        label.font = .caption2
         label.textColor = .ypBlack
-        label.text = "Цена"
+        label.text = String(localized: "cart.cell.priceLabel", defaultValue: "Цена")
         return label
     }()
     
@@ -67,9 +67,10 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     }()
     
     private lazy var deleteButton: UIButton = {
-        let button = UIButton(type: .custom)
+        let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setImage(UIImage(resource: .cartImageDelete), for: .normal)
+        button.setTitleColor(UIColor.ypBlack, for: .normal)
         button.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
         button.tintColor = .ypBlack
         return button
@@ -152,7 +153,8 @@ final class CartTableViewCell: UITableViewCell, ReuseIdentifying {
     // MARK: - Private Static Methods
     private static func priceString(from price: Double) -> String {
         let value = priceFormatter.string(from: NSNumber(value: price)) ?? String(format: "%.2f", price)
-        return "\(value) ETH"
+        let format = String(localized: "cart.format.priceEth", defaultValue: "%@ ETH")
+        return String(format: format, locale: .current, arguments: [value] as [CVarArg])
     }
     
     // MARK: - Private Methods

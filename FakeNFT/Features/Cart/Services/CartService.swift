@@ -3,6 +3,9 @@ import Foundation
 protocol CartService {
     func loadCart() async throws -> [Nft]
     func updateCart(with nftIds: [String]) async throws -> Order
+    func loadCurrencies() async throws -> [Currency]
+    func payOrder(currencyId: String) async throws -> OrderPayment
+    func clearCart() async throws
 }
 
 final class CartServiceImpl: CartService {
@@ -41,5 +44,18 @@ final class CartServiceImpl: CartService {
     func updateCart(with nftIds: [String]) async throws -> Order {
         let request = OrderUpdateRequest(nfts: nftIds)
         return try await networkClient.send(request: request, type: Order.self)
+    }
+    
+    func loadCurrencies() async throws -> [Currency] {
+        try await networkClient.send(request: CurrenciesRequest(), type: [Currency].self)
+    }
+    
+    func payOrder(currencyId: String) async throws -> OrderPayment {
+        try await networkClient.send(request: PaymentRequest(currencyId: currencyId), type: OrderPayment.self)
+    }
+    
+    func clearCart() async throws {
+        let request = OrderUpdateRequest(nfts: [])
+        _ = try await networkClient.send(request: request, type: Order.self)
     }
 }

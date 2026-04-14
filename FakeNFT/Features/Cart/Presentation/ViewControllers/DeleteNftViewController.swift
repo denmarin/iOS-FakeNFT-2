@@ -16,8 +16,8 @@ final class DeleteNftViewController: UIViewController {
     
     private lazy var messageLabel: UILabel = {
         let label = UILabel()
-        label.text = "Вы уверены, что хотите удалить объект из корзины?"
-        label.font = .systemFont(ofSize: 13, weight: .regular)
+        label.text = String(localized: "cart.delete.message", defaultValue: "Вы уверены, что хотите удалить объект из корзины?")
+        label.font = .caption2
         label.numberOfLines = 2
         label.textAlignment = .center
         label.textColor = UIColor(resource: .ypBlack)
@@ -27,8 +27,8 @@ final class DeleteNftViewController: UIViewController {
     
     private lazy var deleteButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Удалить", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
+        button.setTitle(String(localized: "cart.delete.confirm", defaultValue: "Удалить"), for: .normal)
+        button.titleLabel?.font = .bodyRegular
         button.setTitleColor(UIColor(resource: .redUniversal), for: .normal)
         button.backgroundColor = UIColor(resource: .ypBlack)
         button.layer.cornerRadius = 12
@@ -39,8 +39,8 @@ final class DeleteNftViewController: UIViewController {
     
     private lazy var cancelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Вернуться", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
+        button.setTitle(String(localized: "cart.delete.back", defaultValue: "Вернуться"), for: .normal)
+        button.titleLabel?.font = .bodyRegular
         button.setTitleColor(UIColor(resource: .ypWhite), for: .normal)
         button.backgroundColor = UIColor(resource: .ypBlack)
         button.layer.cornerRadius = 12

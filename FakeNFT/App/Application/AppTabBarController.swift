@@ -52,7 +52,7 @@ final class AppTabBarController: UITabBarController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = title
-        label.font = .systemFont(ofSize: 22, weight: .semibold)
+        label.font = .headline3
         label.textColor = .secondaryLabel
         viewController.view.addSubview(label)
 
