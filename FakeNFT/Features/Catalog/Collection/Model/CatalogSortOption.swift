@@ -7,9 +7,9 @@ enum CatalogSortOption: String, CaseIterable, Equatable, Sendable {
     var displayTitle: String {
         switch self {
         case .byName:
-            "По названию"
+            String(localized: "catalog.collection.sort.option.byName")
         case .byNftCount:
-            "По количеству NFT"
+            String(localized: "catalog.collection.sort.option.byNftCount")
         }
     }
 }

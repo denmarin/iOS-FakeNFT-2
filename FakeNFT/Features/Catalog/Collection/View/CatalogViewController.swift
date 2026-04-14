@@ -3,7 +3,21 @@ import UIKit
 final class CatalogViewController: UIViewController {
 
     private enum Constants {
-        static let emptyMessage = "Коллекции пока отсутствуют"
+        static var emptyMessage: String {
+            String(localized: "catalog.collection.emptyMessage")
+        }
+
+        static var retryActionTitle: String {
+            String(localized: "catalog.common.retry")
+        }
+
+        static var sortTitle: String {
+            String(localized: "catalog.collection.sort.title")
+        }
+
+        static var closeActionTitle: String {
+            String(localized: "catalog.common.close")
+        }
     }
 
     private enum Section {
@@ -82,7 +96,7 @@ final class CatalogViewController: UIViewController {
 
     private lazy var retryButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle(NSLocalizedString("Error.repeat", comment: ""), for: .normal)
+        button.setTitle(Constants.retryActionTitle, for: .normal)
         button.titleLabel?.font = .bodyBold
         button.addAction(
             UIAction { [weak self] _ in
@@ -274,7 +288,7 @@ final class CatalogViewController: UIViewController {
 
     private func showSortOptions(options: [CatalogSortOption]) {
         let alert = UIAlertController(
-            title: "Сортировка",
+            title: Constants.sortTitle,
             message: nil,
             preferredStyle: .actionSheet
         )
@@ -285,7 +299,7 @@ final class CatalogViewController: UIViewController {
             }
             alert.addAction(action)
         }
-        alert.addAction(UIAlertAction(title: "Закрыть", style: .cancel))
+        alert.addAction(UIAlertAction(title: Constants.closeActionTitle, style: .cancel))
 
         if let popover = alert.popoverPresentationController {
             popover.sourceView = view

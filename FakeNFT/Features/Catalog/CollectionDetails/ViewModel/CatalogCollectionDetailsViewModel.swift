@@ -3,13 +3,26 @@ import Foundation
 @MainActor
 final class CatalogCollectionDetailsViewModel {
     private enum Constants {
-        static let loadingErrorMessage = "Не удалось загрузить коллекцию NFT. Попробуйте снова."
-        static let favoritesSyncErrorMessage = "Не удалось обновить лайки. Попробуйте снова."
-        static let cartSyncErrorMessage = "Не удалось обновить корзину. Попробуйте снова."
+        static var loadingErrorMessage: String {
+            String(localized: "catalog.collectionDetails.load.error")
+        }
+
+        static var favoritesSyncErrorMessage: String {
+            String(localized: "catalog.collectionDetails.favoritesSync.error")
+        }
+
+        static var cartSyncErrorMessage: String {
+            String(localized: "catalog.collectionDetails.cartSync.error")
+        }
+
+        static var priceEthFormat: String {
+            String(localized: "catalog.collectionDetails.price.ethFormat")
+        }
     }
 
     let headerViewModel: CatalogCollectionDetailsHeaderViewModel
     var onStateChange: ((CatalogCollectionDetailsViewState) -> Void)?
+    var onAllNftsLoadingChange: ((Bool) -> Void)?
 
     private let collection: CatalogCollection
     private let nftsProvider: CatalogCollectionNftsProviding
@@ -18,6 +31,8 @@ final class CatalogCollectionDetailsViewModel {
     private var actionsLoadingTask: Task<Void, Never>?
     private var favoriteSyncTask: Task<Void, Never>?
     private var cartSyncTask: Task<Void, Never>?
+    private var nftsLoadingSequence = 0
+    private var isAllNftsLoading = false
     private var nfts: [Nft] = []
     private var favoriteIDs: Set<String> = []
     private var cartIDs: Set<String> = []
@@ -77,8 +92,11 @@ final class CatalogCollectionDetailsViewModel {
     }
 
     private func loadNfts() {
-        onStateChange?(.loading)
         loadingTask?.cancel()
+        nftsLoadingSequence += 1
+        let sequence = nftsLoadingSequence
+        setAllNftsLoading(true)
+        onStateChange?(.loading)
         loadUserActions()
 
         loadingTask = Task { [weak self] in
@@ -88,9 +106,13 @@ final class CatalogCollectionDetailsViewModel {
                     guard !Task.isCancelled else { return }
                     applyNfts(partialNfts)
                 }
+                guard !Task.isCancelled, nftsLoadingSequence == sequence else { return }
+                setAllNftsLoading(false)
             } catch is CancellationError {
                 return
             } catch {
+                guard nftsLoadingSequence == sequence else { return }
+                setAllNftsLoading(false)
                 onStateChange?(.failed(message: Constants.loadingErrorMessage))
             }
         }
@@ -184,6 +206,12 @@ final class CatalogCollectionDetailsViewModel {
         onStateChange?(.failed(message: message))
     }
 
+    private func setAllNftsLoading(_ isLoading: Bool) {
+        guard isAllNftsLoading != isLoading else { return }
+        isAllNftsLoading = isLoading
+        onAllNftsLoadingChange?(isLoading)
+    }
+
     private func publishContent() {
         let cellModels = nfts.map { nft in
             CatalogCollectionNftCellViewModel(
@@ -213,7 +241,7 @@ final class CatalogCollectionDetailsViewModel {
 
     private static func priceText(from price: Double) -> String {
         let formattedPrice = priceFormatter.string(from: NSNumber(value: price)) ?? String(price)
-        return "\(formattedPrice) ETH"
+        return String(format: Constants.priceEthFormat, locale: .current, formattedPrice)
     }
 
     private static let priceFormatter: NumberFormatter = {

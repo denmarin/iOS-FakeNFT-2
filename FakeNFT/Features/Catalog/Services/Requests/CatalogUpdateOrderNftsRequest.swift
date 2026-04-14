@@ -4,7 +4,7 @@ struct CatalogUpdateOrderNftsRequest: NetworkRequest {
     let ids: [String]
 
     var endpoint: URL? {
-        URL(string: "\(RequestConstants.baseURL)/api/v1/orders/1")
+        CatalogRequestFactory.orderURL()
     }
 
     var httpMethod: HttpMethod {
