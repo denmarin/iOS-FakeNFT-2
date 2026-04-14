@@ -1,7 +1,7 @@
 import Foundation
 
 enum CartSortType: String {
-    case price   
+    case price
     case rating
-    case name    
+    case name
 }

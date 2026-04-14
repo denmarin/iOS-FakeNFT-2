@@ -56,7 +56,6 @@ final class PaymentMethodViewModel {
                     onPaymentResult?(false)
                 }
             } catch {
-                print("Payment error: \(error)")
                 onPaymentResult?(false)
             }
             isLoading = false
