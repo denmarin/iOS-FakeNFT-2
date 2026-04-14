@@ -51,7 +51,6 @@ final class ProfileDetailViewController: UIViewController {
         button.addTarget(self, action: #selector(websiteButtonTapped), for: .touchUpInside)
         button.layer.cornerRadius = 15
         button.layer.borderWidth = 1.5
-        button.layer.borderColor = UIColor.ypBlack.cgColor
         button.translatesAutoresizingMaskIntoConstraints = false
         
         return button
@@ -115,6 +114,16 @@ final class ProfileDetailViewController: UIViewController {
         setupUI()
         setupConstraints()
         configureUI()
+        
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { [weak self] (viewController: Self, previousTraitCollection: UITraitCollection) in
+            self?.updateButtonBorderColor()
+        }
+        
+        updateButtonBorderColor()
+    }
+    
+    private func updateButtonBorderColor() {
+        websiteButton.layer.borderColor = UIColor.ypBlack.cgColor
     }
     
     private func setupNavigationBar() {
