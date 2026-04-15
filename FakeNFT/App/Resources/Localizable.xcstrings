@@ -1433,6 +1433,7 @@
       }
     },
     "Не удалось удалить лайк: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

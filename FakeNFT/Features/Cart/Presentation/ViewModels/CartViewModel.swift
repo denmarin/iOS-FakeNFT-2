@@ -56,15 +56,20 @@ final class CartViewModel {
     func removeNft(_ nft: Nft) {
         isLoading = true
         
+        let fallbackItems = items
         let newItems = items.filter { $0.id != nft.id }
-        let updatedIds = newItems.map { $0.id }
         
         Task {
             do {
-                _ = try await service.updateCart(with: updatedIds)
+                // Merge with current server state to avoid overwriting cart updates from other screens.
+                let remoteItems = try await service.loadCart()
+                var mergedIds = Set(remoteItems.map(\.id))
+                mergedIds.remove(nft.id)
+                _ = try await service.updateCart(with: mergedIds.sorted())
                 self.items = newItems
                 self.isLoading = false
             } catch {
+                self.items = fallbackItems
                 self.isLoading = false
                 let errorModel = ErrorModel(
                     message: String(localized: "cart.error.removeNft", defaultValue: "Не удалось удалить NFT из корзины"),
@@ -88,8 +93,14 @@ final class CartViewModel {
             isLoading = true
             do {
                 items = try await service.loadCart()
+                applySort()
             } catch {
-                print("\(String(localized: "cart.error.refreshPrefix", defaultValue: "Ошибка обновления корзины")): \(error)")
+                let errorModel = ErrorModel(
+                    message: String(localized: "cart.error.loadCart", defaultValue: "Не удалось загрузить корзину"),
+                    actionText: String(localized: "cart.common.retry", defaultValue: "Повторить"),
+                    action: { [weak self] in self?.refreshCart() }
+                )
+                onError?(errorModel)
             }
             isLoading = false
         }

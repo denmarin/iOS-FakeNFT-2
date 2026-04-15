@@ -12,7 +12,8 @@ final class StatisticsViewController: UIViewController {
     
     private let viewModel: StatisticsViewModel
     private let assembly: StatisticsAssembly
-    private var cancellables = Set<AnyCancellable>()
+    private var stateBindingTask: Task<Void, Never>?
+    private var usersBindingTask: Task<Void, Never>?
     
     // MARK: - UI Elements
     private let tableView: UITableView = {
@@ -76,6 +77,11 @@ final class StatisticsViewController: UIViewController {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    deinit {
+        stateBindingTask?.cancel()
+        usersBindingTask?.cancel()
     }
     
     override func viewDidLoad() {
@@ -172,23 +178,27 @@ final class StatisticsViewController: UIViewController {
     }
 
     private func bindViewModel() {
-        viewModel.$state
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] state in
-                self?.updateUI(for: state)
+        stateBindingTask?.cancel()
+        usersBindingTask?.cancel()
+
+        let statePublisher = viewModel.$state
+        stateBindingTask = Task { @MainActor [weak self] in
+            for await state in statePublisher.values {
+                guard let self else { return }
+                updateUI(for: state)
             }
-            .store(in: &cancellables)
-        
-        viewModel.$users
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.tableView.reloadData()
+        }
+
+        let usersPublisher = viewModel.$users
+        usersBindingTask = Task { @MainActor [weak self] in
+            for await _ in usersPublisher.values {
+                guard let self else { return }
+                tableView.reloadData()
             }
-            .store(in: &cancellables)
+        }
     }
     
     private func updateUI(for state: State) {
-        print("🔄 UI State: \(state)")
         switch state {
         case .loading:
             loadingIndicator.startAnimating()

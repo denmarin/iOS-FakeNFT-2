@@ -195,6 +195,7 @@ final class EditProfileViewController: UIViewController,LoadingView,ErrorView{
     
     private func setupUI(){
         let backNavBarButton = UIBarButtonItem(image: UIImage(resource: .backButtonDark), style: .plain, target: self, action: #selector(dismissViewController))
+		backNavBarButton.tintColor = .ypBlack
         self.navigationItem.leftBarButtonItem = backNavBarButton
         
         contentView.addSubview(profilePhotoView)

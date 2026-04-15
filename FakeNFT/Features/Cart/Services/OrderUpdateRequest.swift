@@ -9,7 +9,15 @@ struct OrderUpdateRequest: NetworkRequest {
     
     var httpMethod: HttpMethod { .put }
     
-    var dto: Encodable? {
-        nfts.map { "nfts=\($0)" }.joined(separator: "&")
+    var dto: Dto? {
+        OrderUpdateDto(nfts: nfts)
+    }
+}
+
+private struct OrderUpdateDto: Dto {
+    let nfts: [String]
+
+    func asDictionary() -> [String: String] {
+        ["nfts": nfts.isEmpty ? "null" : nfts.joined(separator: ",")]
     }
 }

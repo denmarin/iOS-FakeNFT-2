@@ -17,6 +17,10 @@ final class ServicesAssembly {
             storage: nftStorage
         )
     }
+
+    var sharedNetworkClient: NetworkClient {
+        networkClient
+    }
     
     @MainActor func makeStatisticsAssembly() -> StatisticsAssembly {
         return StatisticsAssembly(networkClient: self.networkClient)

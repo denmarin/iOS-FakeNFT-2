@@ -60,6 +60,12 @@ final class CartViewController: UIViewController, ErrorView {
             self?.showPaymentMethodScreen()
         }
     }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Keep cart in sync after updates from other tabs/screens.
+        refreshCartData()
+    }
     
     // MARK: - Public Methods
     func refreshCartData() {

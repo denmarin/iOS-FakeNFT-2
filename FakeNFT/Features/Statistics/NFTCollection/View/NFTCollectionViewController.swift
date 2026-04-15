@@ -11,7 +11,8 @@ import Combine
 final class NftCollectionViewController: UIViewController {
     
     private let viewModel: NftCollectionViewModelProtocol
-    private var cancellables = Set<AnyCancellable>()
+    private var stateBindingTask: Task<Void, Never>?
+    private var nftsBindingTask: Task<Void, Never>?
     
     private var hasShownErrorAlert = false
     
@@ -68,6 +69,11 @@ final class NftCollectionViewController: UIViewController {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    deinit {
+        stateBindingTask?.cancel()
+        nftsBindingTask?.cancel()
     }
     
     override func viewDidLoad() {
@@ -169,27 +175,32 @@ final class NftCollectionViewController: UIViewController {
     }
     
     private func bindViewModel() {
-        viewModel.statePublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] state in
-                self?.updateUI(for: state)
+        stateBindingTask?.cancel()
+        nftsBindingTask?.cancel()
+
+        let statePublisher = viewModel.statePublisher
+        stateBindingTask = Task { @MainActor [weak self] in
+            for await state in statePublisher.values {
+                guard let self else { return }
+                updateUI(for: state)
                 if case .error = state {
-                    if self?.hasShownErrorAlert == false {
-                        self?.hasShownErrorAlert = true
-                        self?.showErrorAlert()
+                    if hasShownErrorAlert == false {
+                        hasShownErrorAlert = true
+                        showErrorAlert()
                     }
                 } else {
-                    self?.hasShownErrorAlert = false
+                    hasShownErrorAlert = false
                 }
             }
-            .store(in: &cancellables)
+        }
 
-        viewModel.nftsPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.collectionView.reloadData()
+        let nftsPublisher = viewModel.nftsPublisher
+        nftsBindingTask = Task { @MainActor [weak self] in
+            for await _ in nftsPublisher.values {
+                guard let self else { return }
+                collectionView.reloadData()
             }
-            .store(in: &cancellables)
+        }
     }
     
     private func updateUI(for state: NftCollectionState) {
@@ -264,7 +275,5 @@ extension NftCollectionViewController: UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: true)
-        let nft = viewModel.nfts[indexPath.row]
-        print("Нажат NFT: \(nft.name)")
     }
 }

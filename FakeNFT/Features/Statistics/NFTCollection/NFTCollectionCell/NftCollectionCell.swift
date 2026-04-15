@@ -199,13 +199,11 @@ final class NftCollectionCell: UICollectionViewCell {
     }
     
     @objc private func likeButtonTapped() {
-        print("Нажата кнопка лайка")
         guard let id = currentNftId else { return }
         onLikeTap?(id)
     }
     
     @objc private func cartButtonTapped() {
-        print("Нажата кнопка корзины")
         guard let id = currentNftId else { return }
         onCartTap?(id)
     }

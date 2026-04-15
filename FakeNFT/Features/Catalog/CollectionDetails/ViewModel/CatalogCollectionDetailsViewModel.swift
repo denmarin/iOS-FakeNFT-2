@@ -87,8 +87,9 @@ final class CatalogCollectionDetailsViewModel {
     func didTapCart(for nftID: String) {
         guard nfts.contains(where: { $0.id == nftID }) else { return }
         toggleState(in: &cartIDs, for: nftID)
+        let shouldBeInCart = cartIDs.contains(nftID)
         publishContent()
-        enqueueCartSync()
+        enqueueCartSync(for: nftID, shouldBeInCart: shouldBeInCart)
     }
 
     private func loadNfts() {
@@ -154,8 +155,7 @@ final class CatalogCollectionDetailsViewModel {
         }
     }
 
-    private func enqueueCartSync() {
-        let ids = cartIDs.sorted()
+    private func enqueueCartSync(for nftID: String, shouldBeInCart: Bool) {
         let previousTask = cartSyncTask
 
         cartSyncTask = Task { [weak self] in
@@ -163,7 +163,14 @@ final class CatalogCollectionDetailsViewModel {
             guard let self, !Task.isCancelled else { return }
 
             do {
-                let remoteCartIDs = try await userActionsProvider.updateCartNftIDs(ids)
+                let remoteState = try await userActionsProvider.fetchUserActionsState()
+                var mergedIDs = remoteState.cartNftIDs
+                if shouldBeInCart {
+                    mergedIDs.insert(nftID)
+                } else {
+                    mergedIDs.remove(nftID)
+                }
+                let remoteCartIDs = try await userActionsProvider.updateCartNftIDs(mergedIDs.sorted())
                 guard !Task.isCancelled else { return }
                 applyCartIDs(remoteCartIDs)
             } catch is CancellationError {

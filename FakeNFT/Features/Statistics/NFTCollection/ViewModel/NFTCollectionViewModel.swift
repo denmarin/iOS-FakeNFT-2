@@ -74,8 +74,6 @@ final class NftCollectionViewModel: @preconcurrency NftCollectionViewModelProtoc
     }
     
     func loadNfts() async {
-        print("🚀 loadNfts: Начинаем загрузку коллекции")
-        
         guard !ownerProfile.nfts.isEmpty else {
             state = .empty
             return
@@ -132,7 +130,6 @@ final class NftCollectionViewModel: @preconcurrency NftCollectionViewModelProtoc
         self.nfts = currentNfts
         
         guard let currentProfile = self.myProfile else {
-            print("❌ Ошибка: Профиль еще не загружен!")
             if isCurrentlyLiked {
                 myLikes.append(nftId)
             } else {
@@ -154,43 +151,43 @@ final class NftCollectionViewModel: @preconcurrency NftCollectionViewModelProtoc
             let responseProfile = try await profileUpdateService.updateProfile(dto, id: RequestConstants.token)
 
             self.myProfile = responseProfile
-            
-            print("✅ Лайк успешно обновлен на сервере")
-            
         } catch {
-            print("❌ Ошибка обновления: \(error)")
             if isCurrentlyLiked { myLikes.append(nftId) } else { myLikes.removeAll { $0 == nftId } }
             nfts = nfts
         }
     }
     
     func toggleCart(for nftId: String) async {
+        let shouldBeInCart = !currentCartIds.contains(nftId)
         var newCartIds = currentCartIds
-
-        if newCartIds.contains(nftId) {
-            newCartIds.removeAll { $0 == nftId }
-        } else {
+        if shouldBeInCart {
             newCartIds.append(nftId)
+        } else {
+            newCartIds.removeAll { $0 == nftId }
         }
         
         self.currentCartIds = newCartIds
         self.nfts = self.nfts
         
         do {
-            _ = try await cartService.updateCart(nftIds: newCartIds)
+            let remoteOrder = try await cartService.getCart()
+            var mergedIds = Set(remoteOrder.nfts)
+            if shouldBeInCart {
+                mergedIds.insert(nftId)
+            } else {
+                mergedIds.remove(nftId)
+            }
+
+            _ = try await cartService.updateCart(nftIds: mergedIds.sorted())
             let order = try await cartService.getCart()
             self.currentCartIds = order.nfts
             
         } catch {
-            print("❌ Ошибка корзины: \(error)")
-            
             do {
                 let order = try await cartService.getCart()
                 self.currentCartIds = order.nfts
                 self.nfts = self.nfts
-            } catch {
-                print("❌ Не удалось восстановить состояние корзины: \(error)")
-            }
+            } catch { }
         }
     }
 }

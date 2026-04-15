@@ -36,7 +36,7 @@ final class CatalogViewModel {
 
     private struct ReloadFallbackState: Sendable {
         let paginationState: PaginationState
-        let selectedSortOption: CatalogSortOption?
+        let selectedSortOption: CatalogSortOption
     }
 
     var onStateChange: ((CatalogViewState) -> Void)?
@@ -45,10 +45,11 @@ final class CatalogViewModel {
     var onDidSelectCollection: ((CatalogCollection) -> Void)?
 
     private let collectionsProvider: CatalogCollectionsProviding
+    private let sortStorage: CatalogSortStorageProtocol
     private var loadingTask: Task<Void, Never>?
     private var allCollections: [CatalogCollection] = []
     private var seenCollectionIDs: Set<String> = []
-    private var selectedSortOption: CatalogSortOption?
+    private var selectedSortOption: CatalogSortOption
     private var nextPage = 0
     private var hasNextPage = true
     private var isPageLoading = false
@@ -56,9 +57,12 @@ final class CatalogViewModel {
     private var reloadFallbackState: ReloadFallbackState?
 
     init(
-        collectionsProvider: CatalogCollectionsProviding
+        collectionsProvider: CatalogCollectionsProviding,
+        sortStorage: CatalogSortStorageProtocol = CatalogSortStorage()
     ) {
         self.collectionsProvider = collectionsProvider
+        self.sortStorage = sortStorage
+        self.selectedSortOption = sortStorage.sortOption
     }
 
     deinit {
@@ -89,6 +93,7 @@ final class CatalogViewModel {
         guard selectedSortOption != option else { return }
         let previousSortOption = selectedSortOption
         selectedSortOption = option
+        sortStorage.sortOption = option
         loadFirstPage(
             showFullScreenLoader: allCollections.isEmpty,
             fallbackSortOption: previousSortOption
@@ -126,7 +131,7 @@ final class CatalogViewModel {
         guard hasNextPage, !isPageLoading else { return }
 
         let requestedPage = nextPage
-        let sortBy = selectedSortOption?.serverSort
+        let sortBy = selectedSortOption.serverSort
         let shouldShowPaginationLoader = requestedPage > 0
         loadingSequence += 1
         let sequence = loadingSequence
@@ -170,6 +175,7 @@ final class CatalogViewModel {
         let uniqueCollections = page.collections.filter { seenCollectionIDs.insert($0.id).inserted }
         if !uniqueCollections.isEmpty {
             allCollections.append(contentsOf: uniqueCollections)
+            applyClientSideSortingIfNeeded()
             publishCollections()
             return
         }
@@ -240,6 +246,16 @@ final class CatalogViewModel {
         nextPage = state.nextPage
         hasNextPage = state.hasNextPage
         isPageLoading = false
+    }
+
+    private func applyClientSideSortingIfNeeded() {
+        guard selectedSortOption == .byNftCount else { return }
+        allCollections.sort { lhs, rhs in
+            if lhs.nftCount == rhs.nftCount {
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+            }
+            return lhs.nftCount > rhs.nftCount
+        }
     }
 }
 

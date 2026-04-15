@@ -57,7 +57,6 @@ final class ProfileServiceImp: ProfileDataProvider {
     
     private func loadNFT(by id: String) async throws -> NftCard{
         let request = NFTGetRequest(id: id)
-        print(request)
         let NFTResponse = try await networkClient.send(request: request, type: Nft.self)
         
         let nftCard = NftCard(id: NFTResponse.id,
@@ -78,7 +77,6 @@ final class ProfileServiceImp: ProfileDataProvider {
                     do {
                         return try await self.loadNFT(by: id)
                     } catch {
-                        print("Ошибка загрузки NFT \(id): \(error)")
                         return nil
                     }
                 }
@@ -95,5 +93,4 @@ final class ProfileServiceImp: ProfileDataProvider {
         }
     }
 }
-
 

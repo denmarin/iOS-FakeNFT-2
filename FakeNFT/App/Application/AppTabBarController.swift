@@ -53,24 +53,4 @@ final class AppTabBarController: UITabBarController {
             statsNavigation
         ]
     }
-
-    private func makePlaceholderController(title: String) -> UIViewController {
-        let viewController = UIViewController()
-        viewController.view.backgroundColor = .systemBackground
-        viewController.title = title
-
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = title
-        label.font = .headline3
-        label.textColor = .secondaryLabel
-        viewController.view.addSubview(label)
-
-        NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: viewController.view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: viewController.view.centerYAnchor)
-        ])
-
-        return viewController
-    }
 }

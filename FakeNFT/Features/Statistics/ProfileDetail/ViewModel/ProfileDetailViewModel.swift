@@ -62,10 +62,7 @@ final class ProfileDetailViewModel: @preconcurrency ProfileDetailViewModelProtoc
             let serverResponse = try await profileService.updateProfile(dto, id: currentUserId)
 
             profile = serverResponse
-            print("✅ Профиль успешно обновлен")
-            
         } catch {
-            print("❌ Ошибка обновления профиля: \(error)")
             profile = oldProfile
         }
     }

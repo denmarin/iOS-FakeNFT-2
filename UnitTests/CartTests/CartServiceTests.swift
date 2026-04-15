@@ -76,4 +76,13 @@ final class CartServiceTests: XCTestCase {
         )
         XCTAssertEqual(paymentRequest?.httpMethod, .get)
     }
+
+    func testOrderUpdateRequestBuildsNftsPayload() {
+        let request = OrderUpdateRequest(nfts: ["nft-1", "nft-2"])
+        let clearRequest = OrderUpdateRequest(nfts: [])
+
+        XCTAssertEqual(request.httpMethod, .put)
+        XCTAssertEqual(request.dto?.asDictionary()["nfts"], "nft-1,nft-2")
+        XCTAssertEqual(clearRequest.dto?.asDictionary()["nfts"], "null")
+    }
 }

@@ -32,14 +32,20 @@ final class StatisticsViewModel: StatisticsViewModelProtocol {
     
     @Published private(set) var users: [UserListResponse] = []
     
-    private(set) var currentSortType: SortType = .byRating
+    private(set) var currentSortType: SortType
     
     private let service: StatisticsServiceProtocol
+    private let sortStorage: StatisticsSortStorageProtocol
     
     var onErrorShowAlert: (() -> Void)?
     
-    init(service: StatisticsServiceProtocol) {
+    init(
+        service: StatisticsServiceProtocol,
+        sortStorage: StatisticsSortStorageProtocol = StatisticsSortStorage()
+    ) {
         self.service = service
+        self.sortStorage = sortStorage
+        self.currentSortType = sortStorage.sortType
     }
     
     func loadUsers() async {
@@ -47,14 +53,10 @@ final class StatisticsViewModel: StatisticsViewModelProtocol {
         
         do {
             let loadedUsers = try await service.loadUsers()
-            print("✅ Успешно распарсили \(loadedUsers.count) пользователей")
-            
             self.users = loadedUsers
-            sortUsers(by: .byRating
-            )
+            applySorting()
             self.state = self.users.isEmpty ? .empty : .content
         } catch {
-            print("❌ Ошибка сети или парсинга: \(error)")
             self.state = .error("Ошибка загрузки")
             onErrorShowAlert?()
         }
@@ -65,8 +67,9 @@ final class StatisticsViewModel: StatisticsViewModelProtocol {
     }
     
     func sortUsers(by type: SortType) {
-        guard self.currentSortType != type else { return } 
+        guard self.currentSortType != type else { return }
         self.currentSortType = type
+        self.sortStorage.sortType = type
         applySorting()
     }
     

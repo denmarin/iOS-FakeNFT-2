@@ -20,16 +20,15 @@ final class StatisticsNftService: StatisticsNftServiceProtocol {
     }
     
     func loadNft(id: String) async throws -> Nft {
-
-        let request = StatisticsUsersRequest()
+        let request = StatisticsNftRequest(id: id)
         return try await networkClient.send(request: request, type: Nft.self)
     }
     
     func loadNfts(ids: [String]) async throws -> [Nft] {
         try await withThrowingTaskGroup(of: Nft.self) { group in
-            for _ in ids {
+            for id in ids {
                 group.addTask {
-                    let request = StatisticsUsersRequest()
+                    let request = StatisticsNftRequest(id: id)
                     return try await self.networkClient.send(request: request, type: Nft.self)
                 }
             }
@@ -40,6 +39,14 @@ final class StatisticsNftService: StatisticsNftServiceProtocol {
             }
             return nfts
         }
+    }
+}
+
+private struct StatisticsNftRequest: NetworkRequest {
+    let id: String
+
+    var endpoint: URL? {
+        URL(string: "\(RequestConstants.baseURL)/api/v1/nft/\(id)")
     }
 }
 

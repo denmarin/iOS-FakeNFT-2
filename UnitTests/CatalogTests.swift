@@ -16,7 +16,10 @@ final class CatalogTests: XCTestCase {
                 )
             ]
         )
-        let viewModel = CatalogViewModel(collectionsProvider: service)
+        let viewModel = CatalogViewModel(
+            collectionsProvider: service,
+            sortStorage: MockCatalogSortStorage()
+        )
 
         var states: [CatalogViewState] = []
         let firstStateExpectation = expectation(description: "First state emitted")
@@ -57,7 +60,10 @@ final class CatalogTests: XCTestCase {
                 )
             ]
         )
-        let viewModel = CatalogViewModel(collectionsProvider: service)
+        let viewModel = CatalogViewModel(
+            collectionsProvider: service,
+            sortStorage: MockCatalogSortStorage()
+        )
 
         var states: [CatalogViewState] = []
         let contentExpectation = expectation(description: "Content state emitted")
@@ -106,6 +112,47 @@ final class CatalogTests: XCTestCase {
     }
 
     @MainActor
+    func testViewDidLoad_WhenSortByNftCount_EmitsCollectionsSortedByNftCountDesc() async {
+        let oneNft = makeCollection(id: "one", name: "One", nftIDs: ["n1"])
+        let fourNfts = makeCollection(id: "four", name: "Four", nftIDs: ["n1", "n2", "n3", "n4"])
+        let twoNfts = makeCollection(id: "two", name: "Two", nftIDs: ["n1", "n2"])
+
+        let service = MockCatalogService(
+            queuedResults: [
+                .success(
+                    CatalogCollectionsPage(
+                        collections: [oneNft, fourNfts, twoNfts],
+                        hasNextPage: false
+                    )
+                )
+            ]
+        )
+        let sortStorage = MockCatalogSortStorage()
+        sortStorage.sortOption = .byNftCount
+        let viewModel = CatalogViewModel(
+            collectionsProvider: service,
+            sortStorage: sortStorage
+        )
+
+        var received: [CatalogCollectionCellViewModel] = []
+        let contentExpectation = expectation(description: "Content state emitted")
+
+        viewModel.onStateChange = { state in
+            if case let .content(cellModels) = state {
+                received = cellModels
+                contentExpectation.fulfill()
+            }
+        }
+
+        viewModel.viewDidLoad()
+
+        await fulfillment(of: [contentExpectation], timeout: 1.0)
+
+        XCTAssertEqual(received.map(\.id), ["four", "two", "one"])
+        XCTAssertEqual(received.map(\.nftCount), [4, 2, 1])
+    }
+
+    @MainActor
     func testViewDidLoad_WhenServiceReturnsEmptyPage_EmitsEmptyState() async {
         let service = MockCatalogService(
             queuedResults: [
@@ -117,7 +164,10 @@ final class CatalogTests: XCTestCase {
                 )
             ]
         )
-        let viewModel = CatalogViewModel(collectionsProvider: service)
+        let viewModel = CatalogViewModel(
+            collectionsProvider: service,
+            sortStorage: MockCatalogSortStorage()
+        )
 
         var states: [CatalogViewState] = []
         let emptyExpectation = expectation(description: "Empty state emitted")
@@ -156,7 +206,10 @@ final class CatalogTests: XCTestCase {
                 .failure(MockCatalogServiceError.stubbedFailure)
             ]
         )
-        let viewModel = CatalogViewModel(collectionsProvider: service)
+        let viewModel = CatalogViewModel(
+            collectionsProvider: service,
+            sortStorage: MockCatalogSortStorage()
+        )
 
         var states: [CatalogViewState] = []
         let errorExpectation = expectation(description: "Error state emitted")
@@ -213,7 +266,10 @@ final class CatalogTests: XCTestCase {
                 )
             ]
         )
-        let viewModel = CatalogViewModel(collectionsProvider: service)
+        let viewModel = CatalogViewModel(
+            collectionsProvider: service,
+            sortStorage: MockCatalogSortStorage()
+        )
 
         var states: [CatalogViewState] = []
         var didCallRetry = false
@@ -373,6 +429,10 @@ private final class MockCatalogService: CatalogCollectionsProviding {
         }
         return try queuedResults.removeFirst().get()
     }
+}
+
+private final class MockCatalogSortStorage: CatalogSortStorageProtocol {
+    var sortOption: CatalogSortOption = .byNftCount
 }
 
 private enum MockCatalogServiceError: Error {

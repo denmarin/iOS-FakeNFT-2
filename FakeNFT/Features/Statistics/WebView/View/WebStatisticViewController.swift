@@ -72,6 +72,5 @@ final class WebStatisticViewController: UIViewController {
     
     @objc private func backTapped() {
         viewModel.close()
-        print("Нажата кнопка назад")
     }
 }

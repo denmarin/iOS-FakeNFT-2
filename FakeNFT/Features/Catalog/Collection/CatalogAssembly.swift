@@ -6,11 +6,11 @@ final class CatalogAssembly {
     private let networkClient: NetworkClient
 
     init(
-        servicesAssembly _: ServicesAssembly,
+        servicesAssembly: ServicesAssembly,
         onDidSelectCollection: ((CatalogCollection) -> Void)? = nil
     ) {
         self.onDidSelectCollection = onDidSelectCollection
-        self.networkClient = DefaultNetworkClient()
+        self.networkClient = servicesAssembly.sharedNetworkClient
     }
 
     @MainActor

@@ -54,7 +54,6 @@ final class FavoriteNFTViewModel: ObservableObject {
     
     func didTapLikeButton(nftId: String) {
         let updatedLikesIds = favoriteNftsIds.filter { $0 != nftId }
-        print(updatedLikesIds)
         state = .loading
         
         Task {
@@ -74,8 +73,7 @@ final class FavoriteNFTViewModel: ObservableObject {
                 
                 updateState()
             } catch {
-                state = .error(String(localized: "Не удалось удалить лайк: \(error.localizedDescription)"))
-                updateState()
+                state = .error(String(localized: "Error.unknown"))
             }
         }
     }

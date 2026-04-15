@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum SortType {
+enum SortType: String {
     case byName
     case byRating
 }

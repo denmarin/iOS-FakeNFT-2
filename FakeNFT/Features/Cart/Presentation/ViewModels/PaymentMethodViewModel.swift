@@ -32,7 +32,7 @@ final class PaymentMethodViewModel {
             do {
                 currencies = try await service.loadCurrencies()
             } catch {
-                print("Failed to fetch currencies: \(error)")
+                // Keep current state; the screen can be retried by reopening payment methods.
             }
             isLoading = false
         }

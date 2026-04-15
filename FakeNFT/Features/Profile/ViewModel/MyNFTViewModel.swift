@@ -27,7 +27,7 @@ final class MyNFTViewModel: ObservableObject {
     private var currentSort: MyNftSortType {
         get {
             guard UserDefaults.standard.object(forKey: storageKey) != nil else {
-                return .name
+                return .rating
             }
             let savedValue = UserDefaults.standard.integer(forKey: storageKey)
             return MyNftSortType(rawValue: savedValue) ?? .rating

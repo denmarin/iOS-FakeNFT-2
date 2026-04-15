@@ -71,6 +71,7 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
         table.register(ProfileTableViewCell.self)
         table.separatorStyle = .none
         table.allowsSelection = true
+		table.isScrollEnabled = false
         return table
     }()
     
@@ -122,6 +123,7 @@ final class ProfileViewController: UIViewController, LoadingView, ErrorView{
         profileTable.dataSource = self
         
         let editNavBarButton = UIBarButtonItem(image: UIImage(resource: .edit), style: .plain, target: self, action: #selector(showEditProfileViewController))
+		editNavBarButton.tintColor = .ypBlack
         self.navigationItem.rightBarButtonItem = editNavBarButton
         
         nameAndImageStack.addArrangedSubview(profileImageView)
