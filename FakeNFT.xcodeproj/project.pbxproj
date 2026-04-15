@@ -41,7 +41,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				App/Configuration/InfoPlist/AppInfo.plist,
-				Core/Network/Requests/Request.swift,
 			);
 			target = 3F68069229CBBAF100B4F915 /* FakeNFT */;
 		};

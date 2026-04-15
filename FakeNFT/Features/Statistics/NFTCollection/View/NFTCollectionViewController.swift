@@ -92,8 +92,14 @@ final class NftCollectionViewController: UIViewController {
         view.backgroundColor = .ypWhite
         title = NSLocalizedString("Collection NFT", comment: "")
 
-        navigationController?.navigationBar.tintColor = .ypBlack
-        navigationItem.backButtonTitle = ""
+        let backButton = UIBarButtonItem(
+            image: UIImage(resource: .backButtonDark),
+            style: .plain,
+            target: self,
+            action: #selector(backTapped)
+        )
+        backButton.tintColor = .ypBlack
+        navigationItem.leftBarButtonItem = backButton
     }
     
     private func setupCollectionViewLayout() {
@@ -230,6 +236,10 @@ final class NftCollectionViewController: UIViewController {
             errorLabel.isHidden = true
             emptyLabel.isHidden = false
         }
+    }
+    
+    @objc private func backTapped() {
+        navigationController?.popViewController(animated: true)
     }
     
 }
