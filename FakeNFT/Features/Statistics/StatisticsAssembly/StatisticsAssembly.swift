@@ -36,7 +36,7 @@ final class StatisticsAssembly {
             ownerProfile: ownerProfile,
             nftListService: nftListService,
             profileUpdateService: profileUpdateService,
-            cartService: CartService(),
+            cartService: CartNftService(),
             myProfileService: myProfileService
         )
         

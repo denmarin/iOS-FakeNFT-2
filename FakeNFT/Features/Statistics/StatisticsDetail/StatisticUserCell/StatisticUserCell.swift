@@ -133,8 +133,8 @@ class StatisticUserCell: UITableViewCell {
         let nftsCount = user.nfts?.count ?? 0
         scoreLabel.text = "\(nftsCount)"
         
-        if let avatarString = user.avatar, let url = URL(string: avatarString) {
-            avatarImageView.kf.setImage(with: url)
+        if let avatarString = user.avatar {
+            avatarImageView.kf.setImage(with: avatarString)
         } else {
             avatarImageView.image = UIImage.profileTabBar 
         }

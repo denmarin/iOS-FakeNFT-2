@@ -10,7 +10,7 @@ import WebKit
 
 final class WebStatisticViewController: UIViewController {
     
-    private let viewModel: WebViewModelProtocol
+    private let viewModel: WebStatisticViewModelProtocol
     
     private lazy var webView: WKWebView = {
         let webConfiguration = WKWebViewConfiguration()
@@ -19,7 +19,7 @@ final class WebStatisticViewController: UIViewController {
         return webView
     }()
     
-    init(viewModel: WebViewModelProtocol) {
+    init(viewModel: WebStatisticViewModelProtocol) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }

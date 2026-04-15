@@ -55,7 +55,7 @@ final class ProfileDetailViewModel: @preconcurrency ProfileDetailViewModelProtoc
                 name: profile.name,
                 description: profile.description ?? "",
                 avatar: profile.avatar?.absoluteString ?? "",
-                website: profile.website?.absoluteString ?? "",
+                website: profile.website ?? "",
                 likes: newLikes
             )
      

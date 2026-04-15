@@ -53,7 +53,7 @@ final class NftCollectionViewModel: @preconcurrency NftCollectionViewModelProtoc
     private let nftListService: NftListServiceProtocol
     private let profileUpdateService: ProfileServiceUpdateProtocol
     private let myProfileService: ProfileServiceProtocol
-    private let cartService: CartServiceProtocol
+    private let cartService: CartNftServiceProtocol
     
     private var cancellables = Set<AnyCancellable>()
     private var myLikes: [String] = []
@@ -63,7 +63,7 @@ final class NftCollectionViewModel: @preconcurrency NftCollectionViewModelProtoc
         ownerProfile: Profile,
         nftListService: NftListServiceProtocol,
         profileUpdateService: ProfileServiceUpdateProtocol,
-        cartService: CartServiceProtocol = CartService(),
+        cartService: CartNftServiceProtocol = CartNftService(),
         myProfileService: ProfileServiceProtocol
     ) {
         self.ownerProfile = ownerProfile
@@ -147,7 +147,7 @@ final class NftCollectionViewModel: @preconcurrency NftCollectionViewModelProtoc
                 name: currentProfile.name,
                 description: currentProfile.description ?? "",
                 avatar: currentProfile.avatar?.absoluteString ?? "",
-                website: currentProfile.website?.absoluteString ?? "",
+                website: currentProfile.website ?? "",
                 likes: self.myLikes
             )
 

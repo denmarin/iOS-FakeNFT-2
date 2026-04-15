@@ -7,12 +7,12 @@
 
 import Foundation
 
-protocol CartServiceProtocol {
+protocol CartNftServiceProtocol {
     func getCart() async throws -> OrderResponse
     func updateCart(nftIds: [String]) async throws -> OrderResponse
 }
 
-final class CartService: CartServiceProtocol {
+final class CartNftService: CartNftServiceProtocol {
     private let networkClient: NetworkClient
     
     init(networkClient: NetworkClient = DefaultNetworkClient()) {

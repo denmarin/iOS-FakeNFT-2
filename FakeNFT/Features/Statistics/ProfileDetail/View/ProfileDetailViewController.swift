@@ -224,7 +224,9 @@ final class ProfileDetailViewController: UIViewController {
     @objc private func websiteButtonTapped() {
         guard let website = viewModel.profile.website else { return }
  
-        let webVC = assembly.makeWebViewController(url: website)
+        guard let url = URL(string: website) else { return }
+        
+        let webVC = assembly.makeWebViewController(url: url)
  
         let navController = UINavigationController(rootViewController: webVC)
 
