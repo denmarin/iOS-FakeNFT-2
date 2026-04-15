@@ -209,7 +209,9 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         super.viewWillAppear(animated)
         navigationItem.hidesBackButton = true
         guard let navigationController else { return }
-        previousNavigationBarHidden = navigationController.isNavigationBarHidden
+        if previousNavigationBarHidden == nil {
+            previousNavigationBarHidden = navigationController.isNavigationBarHidden
+        }
         navigationController.setNavigationBarHidden(true, animated: animated)
     }
 
@@ -218,6 +220,7 @@ final class CatalogCollectionDetailsViewController: UIViewController {
         guard isMovingFromParent || isBeingDismissed else { return }
         guard let navigationController, let previousNavigationBarHidden else { return }
         navigationController.setNavigationBarHidden(previousNavigationBarHidden, animated: animated)
+        self.previousNavigationBarHidden = nil
     }
 
     override func viewDidLayoutSubviews() {
