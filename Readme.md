@@ -1,3 +1,5 @@
+ВСЕ СКРИНКАСТЫ ЗДЕСЬ, В ОБЛАКЕ: https://disk.yandex.ru/d/x-K41nvFETsDxg
+
 # ТЗ мобильного приложения FakeNFT
 
 ## Ссылки
