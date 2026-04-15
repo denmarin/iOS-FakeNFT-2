@@ -41,11 +41,7 @@ final class WebStatisticViewController: UIViewController {
         view.addSubview(webView)
         
         let backButton = UIBarButtonItem(
-            image: UIImage(
-                systemName: "chevron.left")?
-                .withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
-                .withTintColor(.black, renderingMode: .alwaysOriginal
-                              ),
+            image: UIImage(resource: .backButtonDark),
             style: .plain,
             target: self,
             action: #selector(backTapped)
@@ -76,5 +72,6 @@ final class WebStatisticViewController: UIViewController {
     
     @objc private func backTapped() {
         viewModel.close()
+        print("Нажата кнопка назад")
     }
 }

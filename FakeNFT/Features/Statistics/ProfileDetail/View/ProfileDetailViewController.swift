@@ -129,14 +129,14 @@ final class ProfileDetailViewController: UIViewController {
     private func setupNavigationBar() {
         navigationController?.navigationBar.tintColor = .ypBlack
         
-        let backImage = UIImage(systemName: "chevron.left")?
-            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
-            .withTintColor(.ypBlack, renderingMode: .alwaysOriginal)
-
-        navigationController?.navigationBar.backIndicatorImage = backImage
-        navigationController?.navigationBar.backIndicatorTransitionMaskImage = backImage
-
-        navigationItem.backButtonDisplayMode = .minimal
+        let backButton = UIBarButtonItem(
+            image: UIImage(resource: .backButtonDark),
+            style: .plain,
+            target: self,
+            action: #selector(backTapped)
+        )
+        backButton.tintColor = .ypBlack
+        navigationItem.leftBarButtonItem = backButton
     }
     
     private func setupUI() {
@@ -232,6 +232,10 @@ final class ProfileDetailViewController: UIViewController {
 
         navController.modalPresentationStyle = .fullScreen
         present(navController, animated: true, completion: nil)
+    }
+    
+    @objc private func backTapped() {
+        navigationController?.popViewController(animated: true)
     }
     
     @objc private func collectionNftTapped() {

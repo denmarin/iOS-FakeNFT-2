@@ -6,13 +6,13 @@
 
 import Foundation
 
+@MainActor
 protocol WebStatisticViewModelProtocol {
     var url: URL { get }
     func close()
 }
 
-@MainActor
-final class WebStatisticViewModel: @preconcurrency WebStatisticViewModelProtocol {
+final class WebStatisticViewModel: WebStatisticViewModelProtocol {
     
     let url: URL
 

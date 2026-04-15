@@ -43,9 +43,9 @@ final class StatisticsAssembly {
         return NftCollectionViewController(viewModel: viewModel)
     }
 
-    func makeWebViewController(url: URL) -> WebViewController {
-        let viewModel = WebViewModel(url: url)
-        return WebViewController(viewModel: viewModel)
+    func makeWebViewController(url: URL) -> WebStatisticViewController {
+        let viewModel = WebStatisticViewModel(url: url)
+        return WebStatisticViewController(viewModel: viewModel)
     }
 
     func makeStatisticsViewModel() -> StatisticsViewModel {
