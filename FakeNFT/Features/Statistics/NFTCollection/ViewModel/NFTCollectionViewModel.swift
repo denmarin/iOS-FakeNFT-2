@@ -177,7 +177,7 @@ final class NftCollectionViewModel: @preconcurrency NftCollectionViewModelProtoc
         self.nfts = self.nfts
         
         do {
-            let updatedIds = try await cartService.updateCart(nftIds: newCartIds)
+            _ = try await cartService.updateCart(nftIds: newCartIds)
             let order = try await cartService.getCart()
             self.currentCartIds = order.nfts
             
