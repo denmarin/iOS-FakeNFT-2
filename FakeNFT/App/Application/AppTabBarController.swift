@@ -27,7 +27,14 @@ final class AppTabBarController: UITabBarController {
         
         let cartViewModel = CartViewModel()
         let cartController = CartViewController(viewModel: cartViewModel)
-        let statsController = UIViewController()
+
+        let statisticsAssembly = servicesAssembly.makeStatisticsAssembly()
+        let statisticsViewModel = statisticsAssembly.makeStatisticsViewModel()
+        
+        let statsController = StatisticsViewController(
+            viewModel: statisticsViewModel,
+            assembly: statisticsAssembly
+        )
 
         let catalogNavigation = UINavigationController(rootViewController: catalogController)
         let cartNavigation = UINavigationController(rootViewController: cartController)

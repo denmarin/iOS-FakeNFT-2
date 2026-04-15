@@ -25,4 +25,22 @@ struct Profile: Sendable, Hashable, Codable {
                 avatar = nil
             }
         }
+    
+    init(
+            id: String,
+            name: String,
+            avatar: URL? = nil,
+            description: String? = nil,
+            website: String? = nil,
+            nfts: [String] = [],
+            likes: [String] = []
+        ) {
+            self.id = id
+            self.name = name
+            self.avatar = avatar
+            self.description = description
+            self.website = website
+            self.nfts = nfts
+            self.likes = likes
+        }
 }
